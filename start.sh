@@ -6,9 +6,9 @@
 # missing tool or a skipped install gives you a sentence to read instead of a
 # stack trace.
 #
-#   ./start.sh              start the app on http://localhost:3000 (or PORT specivied in .env file)
+#   ./start.sh              start the app on http://localhost:3000
 #   ./start.sh --dev        restart automatically when you save a file
-#   ./start.sh --port 4000  listen somewhere other than port 3000 (or PORT specivied in .env file)
+#   ./start.sh --port 4000  listen somewhere other than port 3000
 #   ./start.sh --help       show this message
 #
 # This is for development. On a server, systemd starts the app instead --
@@ -81,11 +81,6 @@ PROJECT_DIR="$(cd "$(dirname "$0")" && pwd)"
 cd "$PROJECT_DIR"
 
 # --- checks -----------------------------------------------------------------
-
-# Check for a .env file
-if [ ! -f .env ]; then
-    die "No .env file found. Please create one."
-fi
 
 command -v node >/dev/null 2>&1 \
     || die "Node.js is not installed. Get it from https://nodejs.org (version ${REQUIRED_NODE_MAJOR} or newer)."

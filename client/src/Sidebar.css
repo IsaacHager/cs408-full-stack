@@ -1,0 +1,8 @@
+.sidebar {
+    left: 0;
+    /* position: fixed; */
+    width: 92px;
+    height: 100vh;
+    background-color: #1b2229;
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+}

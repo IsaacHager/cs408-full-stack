@@ -1,20 +1,26 @@
-const express = require('express');
 const path = require('path');
-require('dotenv').config();
+require('dotenv').config({ path: path.join(__dirname, '../.env') });
+const app = require('./app');
+// const mongoose = require('mongoose');
 
-const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.get('/api/main', (req, res) => {
-    res.json({text: "Hello World"});
-});
+// Database logic once database can be connected with script
+// const MONGO_URI = process.env.MONGO_URI;
 
-// Serve Vite's built static assets
-app.use(express.static(path.join(__dirname, '../client/dist')));
 
-// Catch-all route to serve index.html for React Router / SPA navigation
-app.get('/{*splat}', (req, res) => {
-  res.sendFile(path.join(__dirname, '../client/dist/index.html'));
-});
+// mongoose.connect(MONGO_URI)
+//   .then(() => {
+//     console.log('Connected to MongoDB');
+//     app.listen(PORT, () => {
+//       console.log(`Server listening on port ${PORT}`)
+//     })
+//   })
+//   .catch((err) => {
+//     console.error('MongoDB connection error: ', err);
+//     process.exit(1);
+//   });
 
-app.listen(PORT, () => console.log(`Server listening on port ${PORT}`));
+app.listen(PORT, () => {
+  console.log(`Server listening on port ${PORT}`)
+})
