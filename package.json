@@ -1,0 +1,12 @@
+{
+  "name": "cs408-full-stack",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently --kill-others --prefix-colors \"blue.bold,magenta.bold\" \"npx nodemon server/server.js\" \"npm run dev --prefix client\"",
+    "build": "npm run build --prefix client"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "nodemon": "^3.1.0"
+  }
+}
