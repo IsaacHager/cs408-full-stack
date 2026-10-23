@@ -6,10 +6,11 @@
 # missing tool or a skipped install gives you a sentence to read instead of a
 # stack trace.
 #
-#   ./start.sh              start the app on http://localhost:3000
-#   ./start.sh --dev        restart automatically when you save a file
-#   ./start.sh --port 4000  listen somewhere other than port 3000
-#   ./start.sh --help       show this message
+#   ./start.sh                              start the app on http://localhost:3000
+#   ./start.sh --mongodb-uri '<ATLAS_URI>'  provide a MongoDB Atlas connection string to use in .env
+#   ./start.sh --dev                        restart automatically when you save a file
+#   ./start.sh --port 4000                  listen somewhere other than port 3000
+#   ./start.sh --help                       show this message
 #
 # This is for development. On a server, systemd starts the app instead --
 # see deploy/setup-ec2.sh and deploy/todo-app.service.
@@ -27,6 +28,7 @@ REQUIRED_NODE_MAJOR=20
 
 DEV_MODE="false"
 PORT_OVERRIDE=""
+MONGODB_URI_OVERRIDE=""
 
 # --- helpers ----------------------------------------------------------------
 
@@ -67,6 +69,14 @@ while [ $# -gt 0 ]; do
             PORT_OVERRIDE="$2"
             shift 2
             ;;
+        -m|--mongodb-uri)
+            [ $# -ge 2 ] || die "--mongodb-uri needs a URI, for example: --mongodb-uri mongodb+srv://user:password@host:port/database"
+            case "$2" in
+                ''|*[![:print:]]*) die "--mongodb-uri needs a valid URI, got '$2'" ;;
+            esac
+            MONGODB_URI_OVERRIDE="$2"
+            shift 2
+            ;;
         -h|--help)
             usage
             ;;
@@ -93,6 +103,54 @@ fi
 command -v npm >/dev/null 2>&1 || die "npm is not installed, but Node.js is. Reinstall Node from https://nodejs.org."
 
 [ -f package.json ] || die "no package.json here. Run this script from inside the project folder."
+
+# --- generate env -----------------------------------------------------------
+
+if [ ! -f .env ]; then
+    say "Creating .env file from template..."
+    cp .env.example .env
+
+    say ".env file initialized successfully."
+else
+    say "Existing .env file detected. Skipping baseline template generation."
+fi
+    
+# Swap the template placeholder for the resolved MONGO_URI_OVERRIDE variable.
+# (Using | as a separator instead of / so the slashes in the URI don't break sed)
+if [ -n "$MONGODB_URI_OVERRIDE" ]; then
+
+    if grep -q "<ATLAS_URI>" .env; then
+        if [[ "$OSTYPE" == "darwin"* ]]; then
+            sed -i '' "s|<ATLAS_URI>|$MONGODB_URI_OVERRIDE|g" .env
+        else
+            sed -i "s|<ATLAS_URI>|$MONGODB_URI_OVERRIDE|g" .env
+        fi
+    elif grep -q "^MONGODB_URI=" .env; then
+        if [[ "$OSTYPE" == "darwin"* ]]; then
+            sed -i '' "s|^MONGODB_URI=.*|MONGODB_URI=$MONGODB_URI_OVERRIDE|g" .env
+        else
+            sed -i "s|^MONGODB_URI=.*|MONGODB_URI=$MONGODB_URI_OVERRIDE|g" .env
+        fi
+    else
+        printf '\nMONGODB_URI="%s"\n' $MONGODB_URI_OVERRIDE >> .env
+    fi
+
+    say "Configured .env MongoDB URI"
+else
+    if grep -q "<ATLAS_URI>" .env; then
+        say "WARNING: No MongoDB URI override provided. Please edit the .env file to set MONGODB_URI. THE SERVER START WILL FAIL UNTIL A CONNECTION STRING IS PROVIDED."
+    fi
+fi
+
+# If an explicit port override was provided by the user, inject it too
+if [ ! -z "$PORT_OVERRIDE" ]; then
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        sed -i '' "s|^PORT=.*|PORT=$PORT_OVERRIDE|g" .env
+    else
+        sed -i "s|^PORT=.*|PORT=$PORT_OVERRIDE|g" .env
+    fi
+    say "Configured .env server port to: $PORT_OVERRIDE"
+fi
 
 # Install dependencies on the first run, and again when they change (which is
 # what happens right after a git pull).
