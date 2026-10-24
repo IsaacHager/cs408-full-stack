@@ -76,6 +76,7 @@ tar -czf - \
   --exclude='.git' \
   --exclude='node_modules' \
   --exclude='client/node_modules' \
+  --exclude='client/dist' \
   --exclude='.env*' \
   --exclude='.DS_Store' \
   --exclude='*.log' \

@@ -4,7 +4,7 @@
   "scripts": {
     "dev": "concurrently --kill-others --prefix-colors \"blue.bold,magenta.bold\" \"npx nodemon server/server.js\" \"npm run dev --prefix client\"",
     "build": "npm run build --prefix client",
-    "test": "npm run test:server && npm run test:client",
+    "test": "npm run test:server && npm run test:client && npm run test:e2e",
     "test:server": "npm test --prefix server",
     "test:client": "npm test --prefix client",
     "test:e2e": "playwright test",
@@ -25,5 +25,8 @@
     "mongodb-memory-server": "^10.4.3",
     "nodemon": "^3.1.0",
     "supertest": "^7.3.1"
+  },
+  "dependencies": {
+    "dotenv": "^18.0.9"
   }
 }

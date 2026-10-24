@@ -1,0 +1,5 @@
+.dotted-grid {
+    background-color: #f4edd8; 
+    background-image: radial-gradient(circle, #c8bfa7  1px, transparent 1px);
+    background-size: 20px 20px;
+}

@@ -1,4 +1,6 @@
 const { defineConfig, devices } = require('@playwright/test');
+const path = require('path');
+require('dotenv').config({ path: path.resolve(__dirname, './.env') });
 
 module.exports = defineConfig({
   testDir: './e2e',
@@ -10,6 +12,13 @@ module.exports = defineConfig({
     baseURL: process.env.BASE_URL || 'http://localhost:3000',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
+  },
+  webServer: {
+    command: 'node server/server.js',
+    url: 'http://localhost:3000',
+    reuseExistingServer: !process.env.CI,
+    timeout: 120 * 1000, // 2 minutes
+    stdout: 'pipe',
   },
   projects: [
     {

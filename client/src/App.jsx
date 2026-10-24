@@ -1,5 +1,8 @@
 import { useEffect, useState } from 'react';
+import './App.css';
 import Sidebar from './Sidebar';
+import Header from './Header';
+import Footer from './Footer';
 
 function App() {
   const [message, setMessage] = useState('Loading...');
@@ -12,16 +15,20 @@ function App() {
   }, []);
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-slate-500 w-max min-w-full">
+    <div className="flex min-h-screen w-full">
       <Sidebar />
-      <div className="flex-1 flex items-center justify-center">
-        <div className="bg-slate-800 border border-slate-700 rounded-4xl max-w-md min-w-[250px] shadow-2xl text-center p-8 shrink-0">
-          <p className="text-6xl text-slate-300 font-medium">
-            {message}
-          </p>
-        </div>
+      <div className="flex-1 flex flex-col relative w-full dotted-grid">
+        <Header />
+        <main className="flex-1 flex items-center justify-center p-8">
+          <div className="bg-slate-800 border border-slate-700 rounded-3xl w-11/12 max-w-[320px] min-w-0 md:max-w-md md:min-w-[250px] shadow-2xl text-center p-4 md:p-8 shrink-0">
+            <p className="text-3xl md:text-6xl text-slate-300 font-medium break-words">
+              {message}
+            </p>
+          </div>
+        </main>
+        <Footer />
       </div>
-    </main>
+    </div>
   );
 }
 
