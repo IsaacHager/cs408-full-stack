@@ -57,3 +57,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Test results
+/test-results/
