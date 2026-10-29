@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import './App.css';
 import Layout from './Layout';
 import Home from './Home';
+import Courses from './Courses';
 
 function App() {
   const [message, setMessage] = useState('Loading...');
@@ -19,7 +20,7 @@ function App() {
       <Routes>
         <Route path="/" element={<Layout />}>
           <Route index element={<Home />} />
-          {/* <Route path="/drafts" element={<Drafts />} /> */}
+          <Route path="/courses" element={<Courses />} />
         </Route>
       </Routes>
     </Router>

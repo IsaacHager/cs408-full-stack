@@ -10,16 +10,16 @@ function Sidebar() {
       <div className="text-md text-slate-300 font-medium text-center">
         <AccountButton />
         <hr></hr>
-        <NavButton icon="/magnifying-glass-solid-full.svg" label="Search" />
-        <NavButton icon="/book-open-solid-full.svg" label="All Drafts" />
-        <NavButton icon="/clipboard-list-solid-full.svg" label="ToDo List" />
-        <NavButton icon="/scroll-solid-full.svg" label="Draft" />
-        <NavButton icon="/paper-plane-solid-full.svg" label="Submit" />
-        <NavButton icon="/thumbtack-solid-full.svg" label="Pinboard" />
+        <NavButton to="/" icon="/magnifying-glass-solid-full.svg" label="Search" />
+        <NavButton to="/" icon="/book-open-solid-full.svg" label="All Drafts" />
+        <NavButton to="/" icon="/clipboard-list-solid-full.svg" label="ToDo List" />
+        <NavButton to="/" icon="/scroll-solid-full.svg" label="Draft" />
+        <NavButton to="/" icon="/paper-plane-solid-full.svg" label="Submit" />
+        <NavButton to="/" icon="/thumbtack-solid-full.svg" label="Pinboard" />
       </div>
       <div className="text-md text-slate-300 font-medium text-center mt-auto">
-        <NavButton icon="/graduation-cap-solid-full.svg" label="Courses" />
-        <NavButton icon="/ellipsis-solid-full.svg" label="More" />
+        <NavButton to="/courses" icon="/graduation-cap-solid-full.svg" label="Courses" />
+        <NavButton to="/" icon="/ellipsis-solid-full.svg" label="More" />
       </div>
     </aside>
   );
