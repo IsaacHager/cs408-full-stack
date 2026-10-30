@@ -1,25 +1,31 @@
-import { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { useAuth0 } from '@auth0/auth0-react';
+import { useUser } from './context/UserContext.jsx';
 import './App.css';
 import Layout from './Layout';
 import Home from './Home';
+import Login from './Login';
+import Profile from './Profile'
 import Courses from './Courses';
 
 function App() {
-  const [message, setMessage] = useState('Loading...');
+  const { isAuthenticated, isLoading: auth0Loading } = useAuth0();
+  const { loading: userLoading, hasCanvasToken, hasSkippedCanvas } = useUser();
 
-  useEffect(() => {
-    fetch('/api/main')
-      .then(res => res.json())
-      .then(data => setMessage(data.text))
-      .catch(err => console.error('Failed to fetch:', err));
-  }, []);
+  if (!isAuthenticated) {
+    return <Login />;
+  }
+  
+  if (auth0Loading || userLoading) {
+    return <div className="loading-spinner">Loading application...</div>;
+  }
 
   return (
     <Router>
       <Routes>
         <Route path="/" element={<Layout />}>
           <Route index element={<Home />} />
+          <Route path="/profile" element={<Profile />} />
           <Route path="/courses" element={<Courses />} />
         </Route>
       </Routes>
