@@ -1,8 +1,8 @@
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import Header from '../src/Header';
-import Footer from '../src/Footer';
-import Sidebar from '../src/Sidebar';
+import Header from '../src/components/Header';
+import Footer from '../src/components/Footer';
+import Sidebar from '../src/components/Sidebar';
 
 beforeEach(() => {
   global.fetch = jest.fn(() =>

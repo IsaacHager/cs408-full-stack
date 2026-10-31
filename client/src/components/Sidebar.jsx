@@ -10,7 +10,7 @@ function Sidebar() {
       <div className="text-md text-slate-300 font-medium text-center">
         <AccountButton />
         <hr></hr>
-        <NavButton to="/" icon="/magnifying-glass-solid-full.svg" label="Search" />
+        <NavButton to="/search" icon="/magnifying-glass-solid-full.svg" label="Search" />
         <NavButton to="/" icon="/book-open-solid-full.svg" label="All Drafts" />
         <NavButton to="/" icon="/clipboard-list-solid-full.svg" label="ToDo List" />
         <NavButton to="/" icon="/scroll-solid-full.svg" label="Draft" />

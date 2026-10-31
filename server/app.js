@@ -4,6 +4,7 @@ const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
 const { encryptToken } = require('../utils/encryption');
+const { makeAPIRequest } = require('../utils/canvasAPIInterface');
 
 const app = express();
 
@@ -19,6 +20,23 @@ app.get('/api/health', (req, res) => {
 
 app.get('/api/main', (req, res) => {
     res.json({ text: "Hello World" });
+});
+
+app.post('/api/courses', async (req, res) => {
+    const { userId } = req.body;
+
+    if (!userId) {
+        return res.status(400).json({ error: 'Missing userId parameter.' });
+    }
+
+    try {
+        const courses = await makeAPIRequest(userId, '/api/v1/users/self/favorites/courses?include[]=term&include[]=enrollments&include[]=course_image');
+
+        return res.json(courses);
+    } catch (error) {
+        console.error('Error in /api/courses: ', error);
+        res.status(500).json({ error: 'Failed to load course data.' });
+    }
 });
 
 app.post('/api/users/sync', async (req, res) => {
@@ -106,8 +124,20 @@ app.post('/api/canvas/connect', async (req, res) => {
             signal: AbortSignal.timeout(5000),
         });
 
-        if (!canvasRes.data || !canvasRes.data.id) {
-            return res.status(400).json({ error: 'Invalid Canvas response.' });
+        if (canvasRes.status === 401) {
+            return res.status(401).json({ error: 'Canvas token is invalid or expired.' });
+        }
+
+        if (!canvasRes.ok) {
+            return res.status(canvasRes.status).json({ 
+                error: `Canvas server returned status ${canvasRes.status}. Check your Canvas domain.` 
+            });
+        }
+
+        const canvasData = await canvasRes.json();
+
+        if (!canvasData || !canvasData.id) {
+            return res.status(400).json({ error: 'Invalid response format received from Canvas.' });
         }
 
         const encryptedToken = encryptToken(canvasToken.trim());
@@ -120,7 +150,7 @@ app.post('/api/canvas/connect', async (req, res) => {
                     canvasDomain: cleanDomain,
                     canvasToken: encryptedToken,
                     hasCanvasToken: true,
-                    canvasUserId: canvasRes.data.id,
+                    canvasUserId: canvasData.id,
                     updatedAt: new Date(),
                 },
             }
@@ -134,13 +164,13 @@ app.post('/api/canvas/connect', async (req, res) => {
             success: true,
             message: 'Canvas token connected successfully.',
             canvasUser: {
-                id: canvasRes.data.id,
-                name: canvasRes.data.name,
+                id: canvasData.id,
+                name: canvasData.name,
             },
         });
     } catch (error) {
-        if (error.response && error.response.status === 401) {
-            return res.status(401).json({ error: 'Canvas token is invalid or expired.' });
+        if (error.name === 'TimeoutError') {
+            return res.status(504).json({ error: 'Canvas server connection timed out.' });
         }
         console.error('Canvas connection error:', error.message);
         return res.status(500).json({ error: 'Failed to verify or connect Canvas token.' });

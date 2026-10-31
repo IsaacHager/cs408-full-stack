@@ -41,9 +41,13 @@ export function UserProvider({ children }) {
         }
     }, [isAuthenticated, user, authLoading]);
 
-    const markCanvasConnected = () => {
-        setUserData((prev) => ({ ...prev, hasCanvasToken: true }));
-    };
+    const markCanvasConnected = (canvasDomain) => {
+    setUserData((prev) => ({
+      ...prev,
+      hasCanvasToken: true,
+      ...(canvasDomain && { canvasDomain }),
+    }));
+  };
 
     const skipCanvasPrompt = () => {
         setHasSkippedCanvas(true);
