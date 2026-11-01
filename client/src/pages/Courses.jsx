@@ -28,7 +28,6 @@ function Courses() {
   const handleSelectAll = () => {
     const allIds = courses.map((course, index) => course.id ?? `course-${index}`);
     setSelectedCourseIds(allIds);
-    console.log(allIds);
   };
 
   const handleDeselectAll = () => {

@@ -126,7 +126,9 @@ async function makeAPIDeleteRequest(contextUserId, endpoint, req) {
         if (!response.ok) {
             throw new Error(`Canvas API Error ${response.status}`);
         }
-        return await response.json();
+
+        const textData = await response.text();
+        return textData ? JSON.parse(textData) : { success: true };
 
     } catch (networkError) {
         throw new Error(`Network Error: Cannot connect to Canvas API server.`);

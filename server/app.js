@@ -84,7 +84,6 @@ app.post('/api/courses', async (req, res) => {
 
     try {
         const courses = await makeAPIGetRequest(userId, '/api/v1/users/self/favorites/courses?include[]=course_image');
-        console.log(courses.map(course => course.id));
         return res.json(courses);
     } catch (error) {
         console.error('Error in /api/courses: ', error);
