@@ -1,7 +1,19 @@
 const mongoose = require('mongoose');
-const { decryptToken } = require('../utils/encryption');
+const { decryptToken } = require('./encryption');
 
-async function makeAPIRequest(contextUserId, endpoint) {
+async function getCanvasDomain(contextUserId) {
+    const db = mongoose.connection.db;
+
+    const userInDb = await db.collection('users').findOne({ userId: contextUserId });
+    
+    const canvasDomain = userInDb.canvasDomain.startsWith('https://')
+        ? userInDb.canvasDomain
+        : `https://${userInDb.canvasDomain}`;
+
+    return canvasDomain;
+}
+
+async function makeAPIGetRequest(contextUserId, endpoint) {
     const db = mongoose.connection.db;
 
     const userInDb = await db.collection('users').findOne({ userId: contextUserId });
@@ -9,10 +21,10 @@ async function makeAPIRequest(contextUserId, endpoint) {
     const canvasToken = decryptToken(encryptedCanvasToken);
 
     let url = endpoint.startsWith('http')
-    ? endpoint
-    : userInDb.canvasDomain.startsWith('https://')
-        ? `${userInDb.canvasDomain}${endpoint}`
-        : `https://${userInDb.canvasDomain}${endpoint}`;
+        ? endpoint
+        : userInDb.canvasDomain.startsWith('https://')
+            ? `${userInDb.canvasDomain}${endpoint}`
+            : `https://${userInDb.canvasDomain}${endpoint}`;
 
     let accumulatedResults = [];
 
@@ -23,7 +35,7 @@ async function makeAPIRequest(contextUserId, endpoint) {
                 headers: { Authorization: `Bearer ${canvasToken}` },
             });
         } catch (networkError) {
-            throw new Error(`Network Error: Cannot connect to Canvas API server ${url} ${canvasToken}.`);
+            throw new Error(`Network Error: Cannot connect to Canvas API server.`);
         }
 
         if (!response.ok) {
@@ -56,4 +68,69 @@ async function makeAPIRequest(contextUserId, endpoint) {
     return accumulatedResults;
 }
 
-module.exports = { makeAPIRequest };
+async function makeAPIPostRequest(contextUserId, endpoint, req) {
+    const db = mongoose.connection.db;
+
+    const userInDb = await db.collection('users').findOne({ userId: contextUserId });
+    const encryptedCanvasToken = userInDb.canvasToken;
+    const canvasToken = decryptToken(encryptedCanvasToken);
+
+    let url = endpoint.startsWith('http')
+        ? endpoint
+        : userInDb.canvasDomain.startsWith('https://')
+            ? `${userInDb.canvasDomain}${endpoint}`
+            : `https://${userInDb.canvasDomain}${endpoint}`;
+
+    try {
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${canvasToken}`,
+                'Content-Type': 'application/json'
+            },
+            body: req ? JSON.stringify(req) : null
+        });
+
+        if (!response.ok) {
+            throw new Error(`Canvas API Error ${response.status}`);
+        }
+        return await response.json();
+
+    } catch (networkError) {
+        throw new Error(`Network Error: Cannot connect to Canvas API server.`);
+    }
+}
+
+async function makeAPIDeleteRequest(contextUserId, endpoint, req) {
+    const db = mongoose.connection.db;
+
+    const userInDb = await db.collection('users').findOne({ userId: contextUserId });
+    const encryptedCanvasToken = userInDb.canvasToken;
+    const canvasToken = decryptToken(encryptedCanvasToken);
+
+    let url = endpoint.startsWith('http')
+        ? endpoint
+        : userInDb.canvasDomain.startsWith('https://')
+            ? `${userInDb.canvasDomain}${endpoint}`
+            : `https://${userInDb.canvasDomain}${endpoint}`;
+
+    try {
+        const response = await fetch(url, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${canvasToken}`,
+                'Content-Type': 'application/json'
+            },
+            body: req ? JSON.stringify(req) : null
+        });
+        if (!response.ok) {
+            throw new Error(`Canvas API Error ${response.status}`);
+        }
+        return await response.json();
+
+    } catch (networkError) {
+        throw new Error(`Network Error: Cannot connect to Canvas API server.`);
+    }
+}
+
+module.exports = { makeAPIGetRequest, makeAPIPostRequest, makeAPIDeleteRequest, getCanvasDomain };

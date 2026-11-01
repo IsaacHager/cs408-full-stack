@@ -3,12 +3,19 @@ import { useAuth0 } from '@auth0/auth0-react';
 import { useUser } from '../context/UserContext';
 import '../App.css';
 import CourseCard from '../components/CourseCard';
+import AddCourseContextMenu from '../components/AddCourseContextMenu'
 
 function Courses() {
   const { user } = useAuth0();
   const { hasCanvasToken, loading: userLoading } = useUser();
   const [courses, setCourses] = useState([]);
   const [selectedCourseIds, setSelectedCourseIds] = useState([]);
+  const [contextMenu, setContextMenu] = useState({ visible: false, x: 0, y: 0 });
+  const [refresh, setRefresh] = useState(0);
+
+  const triggerRefresh = () => {
+    setRefresh(prev => prev + 1);
+  };
 
   const handleSelectCourse = (courseId) => {
     setSelectedCourseIds((selected) =>
@@ -21,27 +28,69 @@ function Courses() {
   const handleSelectAll = () => {
     const allIds = courses.map((course, index) => course.id ?? `course-${index}`);
     setSelectedCourseIds(allIds);
+    console.log(allIds);
   };
 
   const handleDeselectAll = () => {
     setSelectedCourseIds([]);
   };
 
-  const handleCanvasLink = () => {
-    
+  const handleCanvasLink = async () => {
+    if (!selectedCourseIds || selectedCourseIds.length === 0) return;
+
+    try {
+
+      const response = await fetch(`/api/canvas/domain`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contextUserId: user?.sub })
+      });
+
+      if (!response.ok) throw new Error("Failed to retrieve Canvas domain lookup.");
+
+      const { canvasDomain } = await response.json();
+      selectedCourseIds.forEach((courseId) => {
+        const courseUrl = `${canvasDomain}/courses/${courseId}`;
+
+        console.log("Opening in Canvas...");
+        window.open(courseUrl, '_blank');
+      });
+
+    } catch (error) {
+      console.error("Error launching Canvas course tabs:", error.message);
+    }
   };
 
   const handleSearchLink = () => {
 
   };
 
-  const handleUnfavorite = () => {
+  const handleUnfavorite = async () => {
+    const response = await fetch('/api/canvas/favorites', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ contextUserId: user?.sub, courseIds: selectedCourseIds })
+    });
+    if (response.ok) console.log("Unfavorited successfully!");
+    handleDeselectAll();
+    triggerRefresh();
+  };
 
-  }
+  const handleAddFavorite = (e) => {
+    const button = e.currentTarget;
+    const x = button.offsetLeft + button.offsetWidth;
+    const y = button.offsetTop;
 
-  const handleAddFavorite = () => {
+    setContextMenu({
+      visible: true,
+      x: x,
+      y: y,
+    });
+  };
 
-  }
+  const handleClose = () => {
+    setContextMenu((prev) => ({ ...prev, visible: false }));
+  };
 
   useEffect(() => {
     if (!user?.sub) return;
@@ -63,7 +112,7 @@ function Courses() {
       .catch((err) => {
         console.error('Fetch courses error:', err);
       });
-  }, [user?.sub]);
+  }, [user?.sub, refresh]);
 
   if (!hasCanvasToken) {
     return (
@@ -75,9 +124,6 @@ function Courses() {
 
   return (
     <div className="text-3xl md:text-6xl grid grid-cols-4 gap-6 p-6 content-start h-full w-full">
-      {/* <h1 className="col-span-3">
-        <u>Tracked Courses</u>
-      </h1> */}
       <div className="col-span-3 w-full">
         <div className="flex items-center gap-3">
           <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-slate-800">
@@ -88,7 +134,7 @@ function Courses() {
           </span>
         </div>
         <p className="text-lg text-slate-600 mt-1">
-          Synced from Canvas Favorited Courses
+          Synced from Canvas Favorited Courses (Some may not register here because Canvas API is arbitrarily selective)
         </p>
       </div>
 
@@ -133,7 +179,7 @@ function Courses() {
         >
           <img
             src="/canvas-lms.svg"
-            alt="Canvas"
+            alt="Open in Canvas"
             className="p-2 w-full h-full object-contain filter transition-all"
           />
         </button>
@@ -176,6 +222,13 @@ function Courses() {
           </button>
         </div>
       </div>
+      <AddCourseContextMenu
+        visible={contextMenu.visible}
+        x={contextMenu.x}
+        y={contextMenu.y}
+        onClose={handleClose}
+        callback={triggerRefresh}
+      />
     </div>
   );
 }

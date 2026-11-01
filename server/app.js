@@ -4,7 +4,7 @@ const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
 const { encryptToken } = require('../utils/encryption');
-const { makeAPIRequest } = require('../utils/canvasAPIInterface');
+const { makeAPIGetRequest, makeAPIPostRequest, makeAPIDeleteRequest, getCanvasDomain } = require('../utils/canvasAPIInterface');
 
 const app = express();
 
@@ -22,6 +22,59 @@ app.get('/api/main', (req, res) => {
     res.json({ text: "Hello World" });
 });
 
+app.post('/api/canvas/domain', async (req, res) => {
+    const { contextUserId } = req.body;
+    try {
+        const canvasDomain = await getCanvasDomain(contextUserId);
+        return res.json({ canvasDomain: canvasDomain });
+    } catch (error) {
+        console.error('Error when retrieving canvas domain:', error.message);
+        return res.status(500).json({ error: 'Error when retrieving canvas domain.' });
+    }
+});
+
+app.post('/api/canvas/favorites', async (req, res) => {
+    const { contextUserId, courseIds } = req.body;
+
+    if (!contextUserId || !courseIds || !Array.isArray(courseIds)) {
+        return res.status(400).json({ error: 'Missing contextUserId or courseIds array.' });
+    }
+
+    try {
+        const favoritePromises = courseIds.map(courseId =>
+            makeAPIPostRequest(contextUserId, `/api/v1/users/self/favorites/courses/${courseId}`, null)
+        );
+
+        await Promise.all(favoritePromises);
+        return res.status(200).json({ message: `Successfully favorited ${courseIds.length} courses.` });
+
+    } catch (error) {
+        console.error('Error batch favoriting Canvas courses:', error.message);
+        return res.status(500).json({ error: 'Failed to complete batch favorite operation.' });
+    }
+});
+
+app.delete('/api/canvas/favorites', async (req, res) => {
+    const { contextUserId, courseIds } = req.body;
+
+    if (!contextUserId || !courseIds || !Array.isArray(courseIds)) {
+        return res.status(400).json({ error: 'Missing contextUserId or courseIds array.' });
+    }
+
+    try {
+        const unfavoritePromises = courseIds.map(courseId =>
+            makeAPIDeleteRequest(contextUserId, `/api/v1/users/self/favorites/courses/${courseId}`, null)
+        );
+
+        await Promise.all(unfavoritePromises);
+        return res.status(200).json({ message: `Successfully unfavorited ${courseIds.length} courses.` });
+
+    } catch (error) {
+        console.error('Error batch unfavoriting Canvas courses:', error.message);
+        return res.status(500).json({ error: 'Failed to complete batch unfavorite operation.' });
+    }
+});
+
 app.post('/api/courses', async (req, res) => {
     const { userId } = req.body;
 
@@ -30,11 +83,53 @@ app.post('/api/courses', async (req, res) => {
     }
 
     try {
-        const courses = await makeAPIRequest(userId, '/api/v1/users/self/favorites/courses?include[]=term&include[]=enrollments&include[]=course_image');
-
+        const courses = await makeAPIGetRequest(userId, '/api/v1/users/self/favorites/courses?include[]=course_image');
+        console.log(courses.map(course => course.id));
         return res.json(courses);
     } catch (error) {
         console.error('Error in /api/courses: ', error);
+        res.status(500).json({ error: 'Failed to load course data.' });
+    }
+});
+
+app.post('/api/all-courses', async (req, res) => {
+    const { userId } = req.body;
+
+    if (!userId) {
+        return res.status(400).json({ error: 'Missing userId parameter.' });
+    }
+
+    try {
+        const courses = await makeAPIGetRequest(userId, '/api/v1//courses?include[]=term');
+
+        const accessibleCourses = courses.filter(course => {
+            if (course.access_restricted_by_date === true) return false;
+
+            if (course.workflow_state === 'completed') return false;
+
+            if (course.enrollments && Array.isArray(course.enrollments)) {
+                const hasConcludedEnrollment = course.enrollments.some(
+                    enrollment => enrollment.enrollment_state === 'completed'
+                );
+                if (hasConcludedEnrollment) return false;
+            }
+
+            if (course.restrict_enrollments_to_course_dates === true && course.end_at) {
+                const endDate = new Date(course.end_at);
+                const now = new Date();
+
+                if (now > endDate) {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+        );
+
+        return res.json(accessibleCourses);
+    } catch (error) {
+        console.error('Error in /api/all-courses: ', error);
         res.status(500).json({ error: 'Failed to load course data.' });
     }
 });
@@ -129,8 +224,8 @@ app.post('/api/canvas/connect', async (req, res) => {
         }
 
         if (!canvasRes.ok) {
-            return res.status(canvasRes.status).json({ 
-                error: `Canvas server returned status ${canvasRes.status}. Check your Canvas domain.` 
+            return res.status(canvasRes.status).json({
+                error: `Canvas server returned status ${canvasRes.status}. Check your Canvas domain.`
             });
         }
 

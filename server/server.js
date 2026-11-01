@@ -19,7 +19,3 @@ mongoose.connect(MONGO_URI)
     console.error('MongoDB connection error: ', err);
     process.exit(1);
   });
-
-app.listen(PORT, () => {
-  console.log(`Server listening on port ${PORT}`)
-})
