@@ -1,34 +1,37 @@
-import { useEffect, useState } from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { useAuth0 } from '@auth0/auth0-react';
+import { useUser } from './context/UserContext.jsx';
 import './App.css';
-import Sidebar from './Sidebar';
-import Header from './Header';
-import Footer from './Footer';
+import Layout from './pages/Layout.jsx';
+import Home from './pages/Home.jsx';
+import Login from './pages/Login.jsx';
+import Profile from './pages/Profile.jsx'
+import Courses from './pages/Courses.jsx';
+import Search from './pages/Search.jsx';
 
 function App() {
-  const [message, setMessage] = useState('Loading...');
+  const { isAuthenticated, isLoading: auth0Loading } = useAuth0();
+  const { loading: userLoading, hasCanvasToken, hasSkippedCanvas } = useUser();
 
-  useEffect(() => {
-    fetch('/api/main')
-      .then(res => res.json())
-      .then(data => setMessage(data.text))
-      .catch(err => console.error('Failed to fetch:', err));
-  }, []);
+  if (!isAuthenticated) {
+    return <Login />;
+  }
+  
+  if (auth0Loading || userLoading) {
+    return <div className="loading-spinner">Loading application...</div>;
+  }
 
   return (
-    <div className="flex min-h-screen w-full">
-      <Sidebar />
-      <div className="flex-1 flex flex-col relative w-full dotted-grid">
-        <Header />
-        <main className="flex-1 flex items-center justify-center p-8">
-          <div className="bg-slate-800 border border-slate-700 rounded-3xl w-11/12 max-w-[320px] min-w-0 md:max-w-md md:min-w-[250px] shadow-2xl text-center p-4 md:p-8 shrink-0">
-            <p className="text-3xl md:text-6xl text-slate-300 font-medium break-words">
-              {message}
-            </p>
-          </div>
-        </main>
-        <Footer />
-      </div>
-    </div>
+    <Router>
+      <Routes>
+        <Route path="/" element={<Layout />}>
+          <Route index element={<Home />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/search" element={<Search />} />
+          <Route path="/courses" element={<Courses />} />
+        </Route>
+      </Routes>
+    </Router>
   );
 }
 

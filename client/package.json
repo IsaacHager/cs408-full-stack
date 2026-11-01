@@ -11,9 +11,15 @@
     "test": "jest --watchAll=false --ci"
   },
   "dependencies": {
+    "@auth0/auth0-react": "^2.30.0",
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.1",
+    "@mui/material": "^9.5.0",
+    "@mui/x-data-grid": "^9.17.0",
     "cs408-full-stack": "file:..",
     "react": "^19.3.0",
-    "react-dom": "^19.3.0"
+    "react-dom": "^19.3.0",
+    "react-router-dom": "^7.18.5"
   },
   "devDependencies": {
     "@babel/core": "^7.29.7",

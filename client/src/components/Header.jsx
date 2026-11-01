@@ -2,7 +2,7 @@ import { useEffect, useState, useRef } from 'react';
 import './Header.css';
 
 function Header() {
-    const [isVisible, setIsVisible] = useState(true);
+    const [isVisible, setIsVisible] = useState(false);
     const touchStartY = useRef(0);
 
     useEffect(() => {
