@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
 import { useUser } from '../context/UserContext';
+import { useNavigate } from 'react-router-dom';
 import '../App.css';
 import CourseCard from '../components/CourseCard';
 import AddCourseContextMenu from '../components/AddCourseContextMenu'
@@ -12,6 +13,7 @@ function Courses() {
   const [selectedCourseIds, setSelectedCourseIds] = useState([]);
   const [contextMenu, setContextMenu] = useState({ visible: false, x: 0, y: 0 });
   const [refresh, setRefresh] = useState(0);
+  const navigate = useNavigate();
 
   const triggerRefresh = () => {
     setRefresh(prev => prev + 1);
@@ -58,10 +60,6 @@ function Courses() {
     } catch (error) {
       console.error("Error launching Canvas course tabs:", error.message);
     }
-  };
-
-  const handleSearchLink = () => {
-
   };
 
   const handleUnfavorite = async () => {
@@ -163,7 +161,7 @@ function Courses() {
         <button
           type="button"
           className="w-14 h-14 flex items-center justify-center bg-slate-800 text-slate-200 border border-slate-700 border-b-[5px] border-b-slate-950 shadow-lg hover:bg-slate-700 hover:text-white active:translate-y-[3px] active:border-b-[2px] transition-all duration-75 cursor-pointer"
-          onClick={handleSearchLink}
+          onClick={() => navigate('/search', { state: { selectedCourseIds } })}
         >
           <img
             src="/magnifying-glass-arrow-right-solid-full.svg"

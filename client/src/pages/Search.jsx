@@ -1,41 +1,118 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useAuth0 } from '@auth0/auth0-react';
+import { DataGrid } from '@mui/x-data-grid';
+import { Box, Typography, CircularProgress } from '@mui/material';
+import { Chip } from '@mui/material';
 import '../App.css';
 
 function Search() {
   const [searchTerm, setSearchTerm] = useState('');
   const inputRef = useRef(null);
+  const { user } = useAuth0();
 
-  return (
-    <div className="w-3/4">
-      <input
-        ref={inputRef}
-        type="text"
-        placeholder="Search..."
-        value={searchTerm}
-        onChange={(e) => {}}
-        className="p-1 mb-2 w-full text-lg border border-gray-300 rounded outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 bg-white"
-      />
-      <div className="w-full">
-        <table className="w-full border-collapse border border-gray-300">
-          <thead>
-            <tr className="bg-gray-100">
-              <th
-                onClick={() => {}}
-                className="cursor-pointer border p-2 text-left"
-              >
-                Table
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-              <tr className="border">
-                <td className="border p-2">Item</td>
-              </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
+  const columns = [
+    {
+      field: 'name',
+      headerName: 'Name',
+      flex: 1.5,
+      minWidth: 200,
+    },
+    {
+      field: 'course_name',
+      headerName: 'Class',
+      flex: 1,
+      minWidth: 150,
+      renderCell: (params) => (
+        <Chip label={params.value || `Course ${params.row.course_id}`} variant="outlined" size="small" />
+      ),
+    },
+    {
+      field: 'points_possible',
+      headerName: 'Points',
+      type: 'number',
+      flex: 0.5,
+      minWidth: 100,
+      valueFormatter: (value) => (value !== null && value !== undefined ? `${value} pts` : '0 pts'),
+    },
+    {
+      field: 'due_at',
+      headerName: 'Due Date',
+      flex: 1,
+      minWidth: 180,
+      sortComparator: (v1, v2, cellParams1, cellParams2) => {
+        if (!v1 && !v2) return 0;
+
+        const sortDirection = cellParams1.api.getSortModel()[0]?.sort;
+        const multi = sortDirection === 'desc' ? 1 : -1;
+
+        if (!v1) return -1 * multi;
+        if (!v2) return 1 * multi;
+
+        return new Date(v1).getTime() - new Date(v2).getTime();
+      },
+      valueFormatter: (value) => {
+        if (!value) return 'No Due Date';
+
+        return new Date(value).toLocaleDateString(undefined, {
+          month: 'short',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+        });
+      },
+    },
+  ];
+  {
+    const [rows, setRows] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+      const fetchCanvasData = async () => {
+        try {
+          const response = await fetch(`/api/assignments`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ contextUserId: user?.sub })
+          });
+
+          const data = await response.json();
+          setRows(data);
+        } catch (error) {
+          console.error('Error loading Canvas data:', error);
+        } finally {
+          setLoading?.(false);
+        }
+      };
+
+      fetchCanvasData();
+    }, []);
+
+    if (loading) {
+      return (
+        <Box className="flex justify-center align-center h-[400px] ">
+          <CircularProgress />
+        </Box>
+      );
+    }
+
+    return (
+      <Box sx={{ p: 4, height: '90%', width: '100%' }}>
+        {/* <Typography variant="h5" gutterBottom>
+          Canvas LMS Assignments
+        </Typography> */}
+
+        <DataGrid
+          rows={rows}
+          columns={columns}
+          pageSizeOptions={[5, 10, 25]}
+          initialState={{
+            pagination: { paginationModel: { pageSize: 10 } },
+          }}
+          disableRowSelectionOnClick
+        />
+      </Box>
+    );
+  };
 }
 
 export default Search;

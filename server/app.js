@@ -133,6 +133,47 @@ app.post('/api/all-courses', async (req, res) => {
     }
 });
 
+app.post('/api/assignments', async (req, res) => {
+    const { contextUserId } = req.body;
+
+    if (!contextUserId) {
+        return res.status(400).json({ error: 'Missing contextUserId parameter.' });
+    }
+
+    try {
+        const courses = await makeAPIGetRequest(contextUserId, '/api/v1/users/self/favorites/courses');
+
+        const courseLookup = {};
+        courses.forEach(c => {
+            courseLookup[c.id] = c.name || c.course_code || `Course ${c.id}`;
+        });
+
+        const assignmentsPromises = courses.map(course =>
+            makeAPIGetRequest(contextUserId, `/api/v1/courses/${course.id}/assignments?exclude_response_fields[]=description&include[]=submission&include[]=assignment_visibility`)
+        );
+
+        const assignmentsArrays = await Promise.all(assignmentsPromises);
+
+        const flatAssignments = assignmentsArrays.flat();
+
+        const cleanData = flatAssignments.map((item, index) => {
+            const realId = item.id || (item.assignment && item.assignment.id);
+
+            return {
+                ...item,
+                id: realId ? String(realId) : `fallback-row-id-${index}`,
+                
+                course_name: courseLookup[item.course_id] || 'Unknown Class'
+            };
+        });
+
+        return res.json(cleanData);
+    } catch (error) {
+        console.error('Error in /api/assignments: ', error);
+        res.status(500).json({ error: 'Failed to load assignment data.' });
+    }
+});
+
 app.post('/api/users/sync', async (req, res) => {
     const { userId, email, name } = req.body;
 
