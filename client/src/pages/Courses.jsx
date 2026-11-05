@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { useAuth0 } from '@auth0/auth0-react';
 import { useUser } from '../context/UserContext';
 import { useNavigate } from 'react-router-dom';
 import '../App.css';
@@ -7,8 +6,7 @@ import CourseCard from '../components/CourseCard';
 import AddCourseContextMenu from '../components/AddCourseContextMenu'
 
 function Courses() {
-  const { user } = useAuth0();
-  const { hasCanvasToken, loading: userLoading } = useUser();
+  const { hasCanvasToken, loading: userLoading, user } = useUser();
   const [courses, setCourses] = useState([]);
   const [selectedCourseIds, setSelectedCourseIds] = useState([]);
   const [contextMenu, setContextMenu] = useState({ visible: false, x: 0, y: 0 });
@@ -44,7 +42,7 @@ function Courses() {
       const response = await fetch(`/api/canvas/domain`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ contextUserId: user?.sub })
+        body: JSON.stringify({ userId: user?.id })
       });
 
       if (!response.ok) throw new Error("Failed to retrieve Canvas domain lookup.");
@@ -53,7 +51,6 @@ function Courses() {
       selectedCourseIds.forEach((courseId) => {
         const courseUrl = `${canvasDomain}/courses/${courseId}`;
 
-        console.log("Opening in Canvas...");
         window.open(courseUrl, '_blank');
       });
 
@@ -66,9 +63,8 @@ function Courses() {
     const response = await fetch('/api/canvas/favorites', {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ contextUserId: user?.sub, courseIds: selectedCourseIds })
+      body: JSON.stringify({ userId: user?.id, courseIds: selectedCourseIds })
     });
-    if (response.ok) console.log("Unfavorited successfully!");
     handleDeselectAll();
     triggerRefresh();
   };
@@ -90,14 +86,14 @@ function Courses() {
   };
 
   useEffect(() => {
-    if (!user?.sub) return;
+    if (!user?.id) return;
     if (!hasCanvasToken) return;
 
     fetch(`/api/courses`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        userId: user.sub,
+        userId: user.id,
       }),
     }).then((res) => {
       if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
@@ -109,7 +105,7 @@ function Courses() {
       .catch((err) => {
         console.error('Fetch courses error:', err);
       });
-  }, [user?.sub, refresh]);
+  }, [user?.id, refresh]);
 
   if (!hasCanvasToken) {
     return (

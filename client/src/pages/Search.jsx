@@ -1,14 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useAuth0 } from '@auth0/auth0-react';
 import { DataGrid } from '@mui/x-data-grid';
-import { Box, Typography, CircularProgress } from '@mui/material';
-import { Chip } from '@mui/material';
+import { Box, Chip } from '@mui/material';
+import { useUser } from '../context/UserContext';
 import '../App.css';
+import LoadingSpinner from '../components/LoadingSpinner';
 
 function Search() {
   const [searchTerm, setSearchTerm] = useState('');
   const inputRef = useRef(null);
-  const { user } = useAuth0();
+  const { user } = useUser();
 
   const columns = [
     {
@@ -72,7 +72,7 @@ function Search() {
           const response = await fetch(`/api/assignments`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ contextUserId: user?.sub })
+            body: JSON.stringify({ userId: user?.id })
           });
 
           const data = await response.json();
@@ -89,9 +89,7 @@ function Search() {
 
     if (loading) {
       return (
-        <Box className="flex justify-center align-center h-[400px] ">
-          <CircularProgress />
-        </Box>
+        <LoadingSpinner />
       );
     }
 

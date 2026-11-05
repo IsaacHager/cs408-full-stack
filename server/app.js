@@ -4,6 +4,7 @@ const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
 const { encryptToken } = require('../utils/encryption');
+const { login, signup, DuplicateUserError } = require('../utils/authentication');
 const { makeAPIGetRequest, makeAPIPostRequest, makeAPIDeleteRequest, getCanvasDomain } = require('../utils/canvasAPIInterface');
 
 const app = express();
@@ -23,9 +24,9 @@ app.get('/api/main', (req, res) => {
 });
 
 app.post('/api/canvas/domain', async (req, res) => {
-    const { contextUserId } = req.body;
+    const { userId } = req.body;
     try {
-        const canvasDomain = await getCanvasDomain(contextUserId);
+        const canvasDomain = await getCanvasDomain(userId);
         return res.json({ canvasDomain: canvasDomain });
     } catch (error) {
         console.error('Error when retrieving canvas domain:', error.message);
@@ -34,15 +35,15 @@ app.post('/api/canvas/domain', async (req, res) => {
 });
 
 app.post('/api/canvas/favorites', async (req, res) => {
-    const { contextUserId, courseIds } = req.body;
+    const { userId, courseIds } = req.body;
 
-    if (!contextUserId || !courseIds || !Array.isArray(courseIds)) {
-        return res.status(400).json({ error: 'Missing contextUserId or courseIds array.' });
+    if (!userId || !courseIds || !Array.isArray(courseIds)) {
+        return res.status(400).json({ error: 'Missing userId or courseIds array.' });
     }
 
     try {
         const favoritePromises = courseIds.map(courseId =>
-            makeAPIPostRequest(contextUserId, `/api/v1/users/self/favorites/courses/${courseId}`, null)
+            makeAPIPostRequest(userId, `/api/v1/users/self/favorites/courses/${courseId}`, null)
         );
 
         await Promise.all(favoritePromises);
@@ -55,15 +56,15 @@ app.post('/api/canvas/favorites', async (req, res) => {
 });
 
 app.delete('/api/canvas/favorites', async (req, res) => {
-    const { contextUserId, courseIds } = req.body;
+    const { userId, courseIds } = req.body;
 
-    if (!contextUserId || !courseIds || !Array.isArray(courseIds)) {
-        return res.status(400).json({ error: 'Missing contextUserId or courseIds array.' });
+    if (!userId || !courseIds || !Array.isArray(courseIds)) {
+        return res.status(400).json({ error: 'Missing userId or courseIds array.' });
     }
 
     try {
         const unfavoritePromises = courseIds.map(courseId =>
-            makeAPIDeleteRequest(contextUserId, `/api/v1/users/self/favorites/courses/${courseId}`, null)
+            makeAPIDeleteRequest(userId, `/api/v1/users/self/favorites/courses/${courseId}`, null)
         );
 
         await Promise.all(unfavoritePromises);
@@ -134,14 +135,14 @@ app.post('/api/all-courses', async (req, res) => {
 });
 
 app.post('/api/assignments', async (req, res) => {
-    const { contextUserId } = req.body;
+    const { userId } = req.body;
 
-    if (!contextUserId) {
-        return res.status(400).json({ error: 'Missing contextUserId parameter.' });
+    if (!userId) {
+        return res.status(400).json({ error: 'Missing userId parameter.' });
     }
 
     try {
-        const courses = await makeAPIGetRequest(contextUserId, '/api/v1/users/self/favorites/courses');
+        const courses = await makeAPIGetRequest(userId, '/api/v1/users/self/favorites/courses');
 
         const courseLookup = {};
         courses.forEach(c => {
@@ -149,7 +150,7 @@ app.post('/api/assignments', async (req, res) => {
         });
 
         const assignmentsPromises = courses.map(course =>
-            makeAPIGetRequest(contextUserId, `/api/v1/courses/${course.id}/assignments?exclude_response_fields[]=description&include[]=submission&include[]=assignment_visibility`)
+            makeAPIGetRequest(userId, `/api/v1/courses/${course.id}/assignments?exclude_response_fields[]=description&include[]=submission&include[]=assignment_visibility`)
         );
 
         const assignmentsArrays = await Promise.all(assignmentsPromises);
@@ -174,8 +175,43 @@ app.post('/api/assignments', async (req, res) => {
     }
 });
 
+app.post('/api/auth/login', async (req, res) => {
+    const { username, password } = req.body;
+
+    if (!username || !password) {
+        return res.status(400).json({ error: 'Missing username or password.' });
+    }
+
+    login(username, password)
+        .then(userData => {
+            res.json(userData);
+        })
+        .catch(error => {
+            res.status(401).json({ error: error.message });
+        });
+});
+
+app.post('/api/auth/signup', async (req, res) => {
+    const { username, password } = req.body;
+
+    if (!username || !password) {
+        return res.status(400).json({ error: 'Missing username or password.' });
+    }
+
+    try {
+        await signup(username, password);
+        res.status(201).send();
+    } catch (error) {
+        if (error instanceof DuplicateUserError) {
+            res.status(409).json({ error: error.message });
+        } else {
+            res.status(500).json({ error: 'Failed to sign up user.' });
+        }
+    }
+});
+
 app.post('/api/users/sync', async (req, res) => {
-    const { userId, email, name } = req.body;
+    const { userId } = req.body;
 
     if (!userId) {
         return res.status(400).json({ error: 'Missing userId' });
@@ -195,8 +231,6 @@ app.post('/api/users/sync', async (req, res) => {
                     hasCanvasToken: false,
                 },
                 $set: {
-                    email: email || '',
-                    name: name || '',
                     lastLogin: new Date(),
                 },
             },
@@ -206,8 +240,7 @@ app.post('/api/users/sync', async (req, res) => {
         const userDoc = result.value || result;
 
         return res.json({
-            userId: userDoc.userId,
-            email: userDoc.email,
+            id: userDoc.userId,
             name: userDoc.name,
             hasCanvasToken: !!userDoc.hasCanvasToken,
             canvasDomain: userDoc.canvasDomain || null,
@@ -228,7 +261,7 @@ app.get('api/users/:userId', async (req, res) => {
         }
 
         return res.json({
-            userId: user.userId,
+            id: user.userId,
             email: user.email,
             name: user.name,
             hasCanvasToken: !!user.hasCanvasToken,
@@ -244,7 +277,7 @@ app.post('/api/canvas/connect', async (req, res) => {
     const { userId, canvasDomain, canvasToken } = req.body;
 
     if (!userId || !canvasDomain || !canvasToken) {
-        return res.status(400).json({ error: 'Missing required parameters.' });
+        return res.status(400).json({ error: `Missing required parameters. userId: ${userId}, canvasDomain: ${canvasDomain}, canvasToken: ${canvasToken}` });
     }
 
     const cleanDomain = canvasDomain

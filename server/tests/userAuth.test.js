@@ -1,87 +1,102 @@
-// NOTE this test no longer tests for auth, but for userSync
 const mongoose = require('mongoose');
 const request = require('supertest');
+const bcrypt = require('bcrypt');
 const app = require('../app');
 const { connectTestDb, clearTestDb, closeTestDb } = require('./setupDb');
 
-describe('User Registration to Database', () => {
+describe('User Authentication and Database Sync', () => {
     beforeAll(async () => await connectTestDb());
 
     afterEach(async () => await clearTestDb());
 
     afterAll(async () => await closeTestDb());
 
-    describe('POST /api/users/sync', () => {
-        const secret = process.env.AUTH0_WEBHOOK_SECRET;
-        
+    describe('POST /api/auth/signup', () => {
+
         const mockUserPayload = {
-            userId: 'auth0|123456789',
-            email: 'student@u.boisestate.edu',
-            name: 'Student',
+            username: 'student_user',
+            password: 'securePassword123',
         };
 
-        test('response succeeds', async () => {
-            const response = await request(app)
-                .post('/api/users/sync')
-                .send(mockUserPayload);
+        describe('POST /api/auth/signup', () => {
+            test('successfully registers user and hashes password with bcrypt', async () => {
+                const response = await request(app)
+                    .post('/api/auth/signup')
+                    .send(mockUserPayload);
 
-            expect(response.status).toBe(200);
-            expect(response.body).toEqual({
-                userId: 'auth0|123456789',
-                email: 'student@u.boisestate.edu',
-                name: 'Student',
-                hasCanvasToken: false,
-                canvasDomain: null,
+                expect(response.status).toBe(201);
+
+                const db = mongoose.connection.db;
+                if (db) {
+                    const userInDb = await db.collection('users').findOne({ name: mockUserPayload.username });
+                    expect(userInDb).not.toBeNull();
+                    expect(userInDb.password).toBeUndefined();
+                    expect(userInDb.passwordHash).toBeDefined();
+
+                    const isPasswordValid = await bcrypt.compare(mockUserPayload.password, userInDb.passwordHash);
+                    expect(isPasswordValid).toBe(true);
+                }
             });
         });
 
-        test('registered user exists in database', async () => {
-            await request(app)
-                .post('/api/users/sync')
-                .send(mockUserPayload);
-
-            const db = mongoose.connection.db;
-
-            if (db) {
-                const userInDb = await db.collection('users').findOne({ userId: mockUserPayload.userId });
-                expect(userInDb.name).toBe('Student');
-            }
-        });
-
-        test('edited data is preserved between logins', async() => {
+        describe('POST /api/users/sync', () => {
+            test('fetches user profile successfully using internal userId', async () => {
                 await request(app)
-                .post('/api/users/sync')
-                .send(mockUserPayload);
+                    .post('/api/auth/signup')
+                    .send(mockUserPayload);
+
+                const db = mongoose.connection.db;
+                if (db) {
+                    const userId = (await db.collection('users').findOne({ name: mockUserPayload.username })).userId;
+
+                    const syncRes = await request(app)
+                        .post('/api/users/sync')
+                        .send({ userId });
+
+                    expect(syncRes.status).toBe(200);
+                    expect(syncRes.body).toMatchObject({
+                        id: userId,
+                        hasCanvasToken: false,
+                        canvasDomain: null,
+                    });
+                }
+            });
+
+            test('edited data is preserved between syncs', async () => {
+                await request(app)
+                    .post('/api/auth/signup')
+                    .send(mockUserPayload);
 
                 const db = mongoose.connection.db;
 
                 if (db) {
+                    const queryId = (await db.collection('users').findOne({ name: mockUserPayload.username })).userId;
+
+                    console.log("Querying userId for sync test:", queryId);
+
                     await db.collection('users').updateOne(
-                        { userId: mockUserPayload.userId },
+                        { userId: queryId },
                         { $set: { hasCanvasToken: true, canvasDomain: 'canvas.boisestate.edu' } }
                     );
+
+                    const repeatSyncRes = await request(app)
+                        .post('/api/users/sync')
+                        .send({ userId: queryId });
+
+                    expect(repeatSyncRes.status).toBe(200);
+                    expect(repeatSyncRes.body.hasCanvasToken).toBe(true);
+                    expect(repeatSyncRes.body.canvasDomain).toBe('canvas.boisestate.edu');
                 }
+            });
 
-                const repeatLoginResponse = await request(app)
-                .post('/api/users/sync')
-                .send(mockUserPayload);
+            test('missing userId is rejected', async () => {
+                const response = await request(app)
+                    .post('/api/users/sync')
+                    .send({});
 
-                expect(repeatLoginResponse.status).toBe(200);
-
-                if (db) {
-                    const userInDb = await db.collection('users').findOne({ userId: mockUserPayload.userId });
-                    expect(userInDb.hasCanvasToken).toBe(true);
-                    expect(userInDb.canvasDomain).toBe('canvas.boisestate.edu');
-                }
-        });
-
-        test('missing userId is rejected', async () => {
-            const response = await request(app)
-                .post('/api/users/sync')
-                .send({ email: 'no_id@example.com' });
-
-            expect(response.status).toBe(400);
-            expect(response.body).toHaveProperty('error');
+                expect(response.status).toBe(400);
+                expect(response.body).toHaveProperty('error');
+            });
         });
     });
 });
