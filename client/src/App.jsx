@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { useUser } from './context/UserContext.jsx';
 import './App.css';
 import Layout from './pages/Layout.jsx';
@@ -9,7 +9,7 @@ import Profile from './pages/Profile.jsx'
 import Courses from './pages/Courses.jsx';
 import Search from './pages/Search.jsx';
 import LoadingSpinner from './components/LoadingSpinner.jsx';
-import GuardedRoute from './GuardedRoute.jsx'
+import GuardedRoute from './components/GuardedRoute.jsx'
 
 function App() {
   const { loading: userLoading, isAuthenticated } = useUser();
@@ -33,6 +33,8 @@ function App() {
           <Route path="/profile" element={<GuardedRoute><Profile /></GuardedRoute>} />
           <Route path="/search" element={<GuardedRoute><Search /></GuardedRoute>} />
           <Route path="/courses" element={<GuardedRoute><Courses /></GuardedRoute>} />
+          <Route path="/login" element={<Navigate to="/" />} />
+          <Route path="/signup" element={<Navigate to="/" />} />
         </Route>
         )}
       </Routes>

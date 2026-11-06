@@ -7,9 +7,6 @@ function Profile() {
     const { hasCanvasToken, user, logoutUser } = useUser();
     const [isModalOpen, setIsModalOpen] = useState(false);
 
-    // const handleLogout = () =>
-    //     auth0Logout({ logoutParams: { returnTo: window.location.origin } });
-
     return (
         <div className="flex min-h-screen items-center justify-center dotted-grid p-4 -mt-18">
             <div className="w-full max-w-md bg-slate-800 p-8 text-center shadow-2xl border border-slate-700">

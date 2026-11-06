@@ -1,7 +1,7 @@
 import React, { useContext } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
-import { useUser } from './context/UserContext';
-import LoadingSpinner from './components/LoadingSpinner';
+import { useUser } from '../context/UserContext';
+import LoadingSpinner from './LoadingSpinner';
 
 export default function GuardedRoute({ children }) {
   const { user, loading } = useUser();

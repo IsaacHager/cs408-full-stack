@@ -5,7 +5,6 @@ const UserContext = createContext();
 export function UserProvider({ children }) {
     const [userData, setUserData] = useState(() => {
         const storedUser = localStorage.getItem('userData');
-        console.log(`Loaded stored user data: ${storedUser}`);
         return storedUser ? JSON.parse(storedUser) : null;
     });
 
@@ -58,7 +57,6 @@ export function UserProvider({ children }) {
     const loginUser = async (data) => {
         setLoading(true);
         setUserData(data);
-        await fetchUserProfile();
         setLoading(false);
     }
 

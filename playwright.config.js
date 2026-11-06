@@ -3,8 +3,6 @@ const path = require('path');
 require('dotenv').config({ path: path.resolve(__dirname, './.env') });
 
 module.exports = defineConfig({
-  globalSetup: require.resolve('./playwright/setup'),
-  globalTeardown: require.resolve('./playwright/teardown'),
   testDir: './e2e',
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
@@ -20,7 +18,7 @@ module.exports = defineConfig({
     url: 'http://localhost:3000',
     reuseExistingServer: false,
     env: {
-      MONGODB_URI: process.env.MONGODB_URI,
+      MONGODB_URI: '',
     },
     timeout: 120 * 1000, // 2 minutes
     stdout: 'pipe',
