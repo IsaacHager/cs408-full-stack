@@ -11,7 +11,7 @@ async function startServer() {
   let mongoURI = process.env.MONGODB_URI;
   let mongoServer = null;
 
-  if (!mongoURI) {
+  if (!mongoURI || mongoURI === '<ATLAS_URI>') {
     console.log('Running on MongoMemoryServer');
     mongoServer = await MongoMemoryServer.create();
     mongoURI = mongoServer.getUri();

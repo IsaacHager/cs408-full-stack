@@ -142,6 +142,35 @@ else
     fi
 fi
 
+# Generate a 32-byte (64 hex characters) key using openssl, falling back to node
+NEW_KEY=$(openssl rand -hex 32 2>/dev/null || node -e "console.log(require('crypto').randomBytes(32).toString('hex'))")
+
+if grep -q "<KEY>" .env; then
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        sed -i '' "s|<KEY>|$NEW_KEY|g" .env
+    else
+        sed -i "s|<KEY>|$NEW_KEY|g" .env
+    fi
+    say "Generated and set KEY in .env"
+
+elif grep -q "^KEY=" .env; then
+    EXISTING_KEY=$(grep "^KEY=" .env | cut -d '=' -f2- | tr -d '"' | tr -d "'")
+
+    if [ -z "$EXISTING_KEY" ]; then
+        if [[ "$OSTYPE" == "darwin"* ]]; then
+            sed -i '' "s|^KEY=.*|KEY=$NEW_KEY|g" .env
+        else
+            sed -i "s|^KEY=.*|KEY=$NEW_KEY|g" .env
+        fi
+        say "Generated and set KEY in .env"
+    else
+        say "Existing KEY detected. Skipping key generation."
+    fi
+else
+    printf '\nKEY="%s"\n' "$NEW_KEY" >> .env
+    say "Appended newly generated KEY to .env"
+fi
+
 # If an explicit port override was provided by the user, inject it too
 if [ ! -z "$PORT_OVERRIDE" ]; then
     if [[ "$OSTYPE" == "darwin"* ]]; then
