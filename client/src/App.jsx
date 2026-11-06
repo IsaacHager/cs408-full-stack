@@ -9,6 +9,7 @@ import Profile from './pages/Profile.jsx'
 import Courses from './pages/Courses.jsx';
 import Search from './pages/Search.jsx';
 import LoadingSpinner from './components/LoadingSpinner.jsx';
+import GuardedRoute from './GuardedRoute.jsx'
 
 function App() {
   const { loading: userLoading, isAuthenticated } = useUser();
@@ -27,11 +28,11 @@ function App() {
             <Route path="*" element={<Login />} />
           </>
         ) : (
-        <Route path="/" element={<Layout />}>
-          <Route index element={<Home />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/search" element={<Search />} />
-          <Route path="/courses" element={<Courses />} />
+        <Route path="/" element={<GuardedRoute><Layout /></GuardedRoute>}>
+          <Route index element={<GuardedRoute><Home /></GuardedRoute>} />
+          <Route path="/profile" element={<GuardedRoute><Profile /></GuardedRoute>} />
+          <Route path="/search" element={<GuardedRoute><Search /></GuardedRoute>} />
+          <Route path="/courses" element={<GuardedRoute><Courses /></GuardedRoute>} />
         </Route>
         )}
       </Routes>

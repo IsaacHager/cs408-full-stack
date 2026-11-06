@@ -138,7 +138,7 @@ if [ -n "$MONGODB_URI_OVERRIDE" ]; then
     say "Configured .env MongoDB URI"
 else
     if grep -q "<ATLAS_URI>" .env; then
-        say "WARNING: No MongoDB URI override provided. Please edit the .env file to set MONGODB_URI. THE SERVER START WILL FAIL UNTIL A CONNECTION STRING IS PROVIDED."
+        say "No MongoDB URI override provided. Please edit the .env file to set MONGODB_URI. The server will run on a local memory server until a URI is provided."
     fi
 fi
 

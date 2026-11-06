@@ -3,6 +3,7 @@ require('dotenv').config({ path: path.join(__dirname, '../.env') });
 const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
+const cookieParser = require('cookie-parser');
 const { encryptToken } = require('../utils/encryption');
 const { login, signup, DuplicateUserError } = require('../utils/authentication');
 const { makeAPIGetRequest, makeAPIPostRequest, makeAPIDeleteRequest, getCanvasDomain } = require('../utils/canvasAPIInterface');
@@ -11,6 +12,7 @@ const app = express();
 
 app.use(cors());
 app.use(express.json());
+app.use(cookieParser());
 
 // Serve Vite's built static assets
 app.use(express.static(path.join(__dirname, '../client/dist')));
@@ -163,7 +165,7 @@ app.post('/api/assignments', async (req, res) => {
             return {
                 ...item,
                 id: realId ? String(realId) : `fallback-row-id-${index}`,
-                
+
                 course_name: courseLookup[item.course_id] || 'Unknown Class'
             };
         });
@@ -182,13 +184,21 @@ app.post('/api/auth/login', async (req, res) => {
         return res.status(400).json({ error: 'Missing username or password.' });
     }
 
-    login(username, password)
-        .then(userData => {
-            res.json(userData);
-        })
-        .catch(error => {
-            res.status(401).json({ error: error.message });
-        });
+    try {
+        const response = await login(username, password);
+
+        res.cookie('userId', response.id, { httpOnly: true, sameSite: 'Strict' });
+
+        return res.json(response);
+    } catch (error) {
+        return res.status(500).json({ error: 'Failed to log in user.' });
+    }
+
+});
+
+app.post('/api/auth/logout', (req, res) => {
+    res.clearCookie('userId', { httpOnly: true, sameSite: 'Strict' });
+    return res.json({ message: 'User logged out successfully.' });
 });
 
 app.post('/api/auth/signup', async (req, res) => {
@@ -211,13 +221,13 @@ app.post('/api/auth/signup', async (req, res) => {
 });
 
 app.post('/api/users/sync', async (req, res) => {
-    const { userId } = req.body;
-
-    if (!userId) {
-        return res.status(400).json({ error: 'Missing userId' });
-    }
-
     try {
+        const userId = req.cookies?.userId || req.body?.userId;
+
+        if (!userId) {
+            return res.status(400).json({ error: 'Missing userId' });
+        }
+
         const db = mongoose.connection.db;
 
         const result = await db.collection('users').findOneAndUpdate(
@@ -251,7 +261,7 @@ app.post('/api/users/sync', async (req, res) => {
     }
 });
 
-app.get('api/users/:userId', async (req, res) => {
+app.get('/api/users/:userId', async (req, res) => {
     try {
         const db = mongoose.connection.db;
         const user = await db.collection('users').findOne({ userId: req.params.userId });
