@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { DataGrid } from '@mui/x-data-grid';
 import { Box, Chip } from '@mui/material';
 import { useUser } from '../context/UserContext';
@@ -6,8 +6,6 @@ import '../App.css';
 import LoadingSpinner from '../components/LoadingSpinner';
 
 function Search() {
-  const [searchTerm, setSearchTerm] = useState('');
-  const inputRef = useRef(null);
   const { user } = useUser();
 
   const columns = [
@@ -69,11 +67,7 @@ function Search() {
     useEffect(() => {
       const fetchCanvasData = async () => {
         try {
-          const response = await fetch(`/api/assignments`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userId: user?.id })
-          });
+          const response = await fetch(`/api/canvas/assignments?userId=${user?.id}`);
 
           const data = await response.json();
           setRows(data);

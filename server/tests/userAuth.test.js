@@ -39,7 +39,7 @@ describe('User Authentication and Database Sync', () => {
             });
         });
 
-        describe('POST /api/users/sync', () => {
+        describe('GET /api/auth/sync', () => {
             test('fetches user profile successfully using internal userId', async () => {
                 await request(app)
                     .post('/api/auth/signup')
@@ -50,8 +50,7 @@ describe('User Authentication and Database Sync', () => {
                     const userId = (await db.collection('users').findOne({ name: mockUserPayload.username })).userId;
 
                     const syncRes = await request(app)
-                        .post('/api/users/sync')
-                        .send({ userId });
+                        .get(`/api/auth/sync?userId=${userId}`);
 
                     expect(syncRes.status).toBe(200);
                     expect(syncRes.body).toMatchObject({
@@ -80,8 +79,7 @@ describe('User Authentication and Database Sync', () => {
                     );
 
                     const repeatSyncRes = await request(app)
-                        .post('/api/users/sync')
-                        .send({ userId: queryId });
+                        .get(`/api/auth/sync?userId=${queryId}`);
 
                     expect(repeatSyncRes.status).toBe(200);
                     expect(repeatSyncRes.body.hasCanvasToken).toBe(true);
@@ -91,8 +89,7 @@ describe('User Authentication and Database Sync', () => {
 
             test('missing userId is rejected', async () => {
                 const response = await request(app)
-                    .post('/api/users/sync')
-                    .send({});
+                    .get(`/api/auth/sync`);
 
                 expect(response.status).toBe(400);
                 expect(response.body).toHaveProperty('error');

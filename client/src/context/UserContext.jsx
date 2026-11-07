@@ -14,14 +14,7 @@ export function UserProvider({ children }) {
     const fetchUserProfile = async () => {
         if (!userData?.id) return;
         try {
-            const res = await fetch(`/api/users/sync`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                credentials: 'include',
-                body: JSON.stringify({
-                    userId: userData.id,
-                }),
-            });
+            const res = await fetch(`/api/auth/sync?userId=${userData.id}`, { credentials: 'include' });
 
             if (res.ok) {
                 const data = await res.json();
