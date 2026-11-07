@@ -18,7 +18,9 @@ export default function NewTaskModal({ taskId, draftId, parentId, isOpen, onClos
 
         const insert = !taskId;
 
-        if (insert && task === '') return;    // TODO handle error
+        if (insert && task === '') {
+            throw new Error("Task description cannot be empty");
+        }
 
         try {
             let res;
