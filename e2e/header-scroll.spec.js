@@ -1,4 +1,4 @@
-const { test, expect } = require('@playwright/test');
+const { test, expect } = require('../playwright/fixtures.ts');
 
 test('Header Scroll and Sticky Behavior', async ({ page }) => {
     await page.goto('/');

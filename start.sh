@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Start the todo app on your own machine.
+# Start canvas desk on your own machine.
 #
 # Checks that everything the app needs is in place before starting it, so a
 # missing tool or a skipped install gives you a sentence to read instead of a
@@ -13,7 +13,7 @@
 #   ./start.sh --help                       show this message
 #
 # This is for development. On a server, systemd starts the app instead --
-# see deploy/setup-ec2.sh and deploy/todo-app.service.
+# see deploy/setup-ec2.sh and deploy/canvas-desk.service.
 #
 # Works on macOS and Linux.
 
@@ -138,8 +138,37 @@ if [ -n "$MONGODB_URI_OVERRIDE" ]; then
     say "Configured .env MongoDB URI"
 else
     if grep -q "<ATLAS_URI>" .env; then
-        say "WARNING: No MongoDB URI override provided. Please edit the .env file to set MONGODB_URI. THE SERVER START WILL FAIL UNTIL A CONNECTION STRING IS PROVIDED."
+        say "No MongoDB URI override provided. Please edit the .env file to set MONGODB_URI. The server will run on a local memory server until a URI is provided."
     fi
+fi
+
+# Generate a 32-byte (64 hex characters) key using openssl, falling back to node
+NEW_KEY=$(openssl rand -hex 32 2>/dev/null || node -e "console.log(require('crypto').randomBytes(32).toString('hex'))")
+
+if grep -q "<KEY>" .env; then
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        sed -i '' "s|<KEY>|$NEW_KEY|g" .env
+    else
+        sed -i "s|<KEY>|$NEW_KEY|g" .env
+    fi
+    say "Generated and set KEY in .env"
+
+elif grep -q "^KEY=" .env; then
+    EXISTING_KEY=$(grep "^KEY=" .env | cut -d '=' -f2- | tr -d '"' | tr -d "'")
+
+    if [ -z "$EXISTING_KEY" ]; then
+        if [[ "$OSTYPE" == "darwin"* ]]; then
+            sed -i '' "s|^KEY=.*|KEY=$NEW_KEY|g" .env
+        else
+            sed -i "s|^KEY=.*|KEY=$NEW_KEY|g" .env
+        fi
+        say "Generated and set KEY in .env"
+    else
+        say "Existing KEY detected. Skipping key generation."
+    fi
+else
+    printf '\nKEY="%s"\n' "$NEW_KEY" >> .env
+    say "Appended newly generated KEY to .env"
 fi
 
 # If an explicit port override was provided by the user, inject it too

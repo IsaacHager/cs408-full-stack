@@ -2,10 +2,17 @@ const mongoose = require('mongoose');
 const { decryptToken } = require('./encryption');
 
 async function getCanvasDomain(contextUserId) {
+    if (!contextUserId) {
+        throw new Error(`Missing user ID`);
+    }
     const db = mongoose.connection.db;
 
     const userInDb = await db.collection('users').findOne({ userId: contextUserId });
     
+    if (!userInDb) {
+        throw new Error(`User not in database`);
+    }
+
     const canvasDomain = userInDb.canvasDomain.startsWith('https://')
         ? userInDb.canvasDomain
         : `https://${userInDb.canvasDomain}`;
@@ -14,10 +21,24 @@ async function getCanvasDomain(contextUserId) {
 }
 
 async function makeAPIGetRequest(contextUserId, endpoint) {
+    if (!contextUserId || !endpoint) {
+        throw new Error(`Missing parameter`);
+    }
+
     const db = mongoose.connection.db;
 
     const userInDb = await db.collection('users').findOne({ userId: contextUserId });
+
+    if (!userInDb) {
+        throw new Error(`User not in database`);
+    }
+
     const encryptedCanvasToken = userInDb.canvasToken;
+
+    if (!encryptedCanvasToken) {
+        throw new Error(`Canvas Token not connected`);
+    }
+
     const canvasToken = decryptToken(encryptedCanvasToken);
 
     let url = endpoint.startsWith('http')
@@ -69,10 +90,24 @@ async function makeAPIGetRequest(contextUserId, endpoint) {
 }
 
 async function makeAPIPostRequest(contextUserId, endpoint, req) {
+    if (!contextUserId || !endpoint) {
+        throw new Error(`Missing parameter`);
+    }
+
     const db = mongoose.connection.db;
 
     const userInDb = await db.collection('users').findOne({ userId: contextUserId });
+
+    if (!userInDb) {
+        throw new Error(`User not in database`);
+    }
+
     const encryptedCanvasToken = userInDb.canvasToken;
+
+    if (!encryptedCanvasToken) {
+        throw new Error(`Canvas Token not connected`);
+    }
+
     const canvasToken = decryptToken(encryptedCanvasToken);
 
     let url = endpoint.startsWith('http')
@@ -102,10 +137,24 @@ async function makeAPIPostRequest(contextUserId, endpoint, req) {
 }
 
 async function makeAPIDeleteRequest(contextUserId, endpoint, req) {
+    if (!contextUserId || !endpoint) {
+        throw new Error(`Missing parameter`);
+    }
+
     const db = mongoose.connection.db;
 
     const userInDb = await db.collection('users').findOne({ userId: contextUserId });
+
+    if (!userInDb) {
+        throw new Error(`User not in database`);
+    }
+
     const encryptedCanvasToken = userInDb.canvasToken;
+
+    if (!encryptedCanvasToken) {
+        throw new Error(`Canvas Token not connected`);
+    }
+
     const canvasToken = decryptToken(encryptedCanvasToken);
 
     let url = endpoint.startsWith('http')

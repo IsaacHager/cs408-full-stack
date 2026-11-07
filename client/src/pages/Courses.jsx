@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { useAuth0 } from '@auth0/auth0-react';
 import { useUser } from '../context/UserContext';
 import { useNavigate } from 'react-router-dom';
 import '../App.css';
@@ -7,8 +6,7 @@ import CourseCard from '../components/CourseCard';
 import AddCourseContextMenu from '../components/AddCourseContextMenu'
 
 function Courses() {
-  const { user } = useAuth0();
-  const { hasCanvasToken, loading: userLoading } = useUser();
+  const { hasCanvasToken, loading: userLoading, user } = useUser();
   const [courses, setCourses] = useState([]);
   const [selectedCourseIds, setSelectedCourseIds] = useState([]);
   const [contextMenu, setContextMenu] = useState({ visible: false, x: 0, y: 0 });
@@ -41,11 +39,7 @@ function Courses() {
 
     try {
 
-      const response = await fetch(`/api/canvas/domain`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ contextUserId: user?.sub })
-      });
+      const response = await fetch(`/api/canvas/domain?userId=${user?.id}`);
 
       if (!response.ok) throw new Error("Failed to retrieve Canvas domain lookup.");
 
@@ -53,7 +47,6 @@ function Courses() {
       selectedCourseIds.forEach((courseId) => {
         const courseUrl = `${canvasDomain}/courses/${courseId}`;
 
-        console.log("Opening in Canvas...");
         window.open(courseUrl, '_blank');
       });
 
@@ -66,9 +59,8 @@ function Courses() {
     const response = await fetch('/api/canvas/favorites', {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ contextUserId: user?.sub, courseIds: selectedCourseIds })
+      body: JSON.stringify({ userId: user?.id, courseIds: selectedCourseIds })
     });
-    if (response.ok) console.log("Unfavorited successfully!");
     handleDeselectAll();
     triggerRefresh();
   };
@@ -90,26 +82,21 @@ function Courses() {
   };
 
   useEffect(() => {
-    if (!user?.sub) return;
+    if (!user?.id) return;
     if (!hasCanvasToken) return;
 
-    fetch(`/api/courses`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        userId: user.sub,
-      }),
-    }).then((res) => {
-      if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
-      return res.json();
-    })
+    fetch(`/api/canvas/favorites?userId=${user.id}`)
+      .then((res) => {
+        if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
+        return res.json();
+      })
       .then((data) => {
         setCourses(data || []);
       })
       .catch((err) => {
         console.error('Fetch courses error:', err);
       });
-  }, [user?.sub, refresh]);
+  }, [user?.id, refresh]);
 
   if (!hasCanvasToken) {
     return (
@@ -138,7 +125,7 @@ function Courses() {
       <div className="col-span-1 flex items-center justify-end gap-3">
         <button
           type="button"
-          className="w-10 h-10 flex items-center justify-center bg-slate-800 text-slate-200 border border-slate-700 border-b-[5px] border-b-slate-950 shadow-lg hover:bg-slate-700 hover:text-white active:translate-y-[3px] active:border-b-[2px] transition-all duration-75 cursor-pointer"
+          className="!w-10 !h-10 tactile-button"
           onClick={handleDeselectAll}
         >
           <img
@@ -149,7 +136,7 @@ function Courses() {
         </button>
         <button
           type="button"
-          className="w-10 h-10 flex items-center justify-center bg-slate-800 text-slate-200 border border-slate-700 border-b-[5px] border-b-slate-950 shadow-lg hover:bg-slate-700 hover:text-white active:translate-y-[3px] active:border-b-[2px] transition-all duration-75 cursor-pointer"
+          className="!w-10 !h-10 tactile-button"
           onClick={handleSelectAll}
         >
           <img
@@ -160,7 +147,7 @@ function Courses() {
         </button>
         <button
           type="button"
-          className="w-14 h-14 flex items-center justify-center bg-slate-800 text-slate-200 border border-slate-700 border-b-[5px] border-b-slate-950 shadow-lg hover:bg-slate-700 hover:text-white active:translate-y-[3px] active:border-b-[2px] transition-all duration-75 cursor-pointer"
+          className="tactile-button"
           onClick={() => navigate('/search', { state: { selectedCourseIds } })}
         >
           <img
@@ -171,7 +158,7 @@ function Courses() {
         </button>
         <button
           type="button"
-          className="w-14 h-14 flex items-center justify-center bg-slate-800 text-slate-200 border border-slate-700 border-b-[5px] border-b-slate-950 shadow-lg hover:bg-slate-700 hover:text-white active:translate-y-[3px] active:border-b-[2px] transition-all duration-75 cursor-pointer"
+          className="tactile-button"
           onClick={handleCanvasLink}
         >
           <img
@@ -182,7 +169,7 @@ function Courses() {
         </button>
         <button
           type="button"
-          className="w-14 h-14 flex items-center justify-center bg-slate-800 text-slate-200 border border-slate-700 border-b-[5px] border-b-slate-950 shadow-lg hover:bg-slate-700 hover:text-white active:translate-y-[3px] active:border-b-[2px] transition-all duration-75 cursor-pointer"
+          className="tactile-button"
           onClick={handleUnfavorite}
         >
           <img

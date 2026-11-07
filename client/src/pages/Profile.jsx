@@ -1,16 +1,11 @@
-import { useState, useEffect } from 'react';
-import { useAuth0 } from '@auth0/auth0-react';
+import { useState } from 'react';
 import { useUser } from '../context/UserContext';
 import ConnectCanvasModal from '../components/ConnectCanvasModal';
 import '../App.css';
 
 function Profile() {
-    const { user, logout: auth0Logout } = useAuth0();
-    const { hasCanvasToken, userData } = useUser();
+    const { hasCanvasToken, user, logoutUser } = useUser();
     const [isModalOpen, setIsModalOpen] = useState(false);
-
-    const handleLogout = () =>
-        auth0Logout({ logoutParams: { returnTo: window.location.origin } });
 
     return (
         <div className="flex min-h-screen items-center justify-center dotted-grid p-4 -mt-18">
@@ -20,12 +15,12 @@ function Profile() {
                     <h1 className="text-2xl font-bold mb-4">User Profile</h1>
 
                     <div className="bg-slate-800 p-4 rounded-xl border border-slate-700 mb-6 text-left">
-                        <p className="text-sm text-slate-300">Email: <span className="font-medium text-white">{user?.email}</span></p>
-                        <p className="text-sm text-slate-300">Username: <span className="font-medium text-white">{user?.nickname}</span></p>
+                        <p className="text-sm text-slate-300">Username: <span className="font-medium text-white">{user?.name}</span></p>
+                        <p className="text-sm text-slate-300">User ID: <span className="font-medium text-white">{user?.id}</span></p>
                     </div>
 
                     <button
-                        onClick={handleLogout}
+                        onClick={logoutUser}
                         className="w-full py-3 px-4 bg-slate-700 hover:bg-rose-500 text-white font-semibold rounded-xl transition mb-8"
                     >
                         Log Out
@@ -41,7 +36,7 @@ function Profile() {
                                 />
                                 <span className="text-sm font-medium">
                                     {hasCanvasToken
-                                        ? `Connected (${userData?.canvasDomain || 'Canvas'})`
+                                        ? `Connected (${user?.canvasDomain || 'Canvas'})`
                                         : 'Not Connected'}
                                 </span>
                             </div>

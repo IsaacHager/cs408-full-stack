@@ -1,7 +1,7 @@
-const { test, expect } = require('@playwright/test');
+const { test, expect } = require('../playwright/fixtures.ts');
 
 test.describe('CanvasDesk App Flow Core Integration Tests', () => {
-  
+
     test('should load app view canvas and wait for API text delivery', async ({ page }) => {
         await page.goto('/');
 
@@ -11,7 +11,7 @@ test.describe('CanvasDesk App Flow Core Integration Tests', () => {
 
         const contentMessage = page.locator('main p');
         await expect(contentMessage).toBeVisible();
-        
+
         await expect(contentMessage).not.toHaveText('Loading...', { timeout: 5000 });
     });
 });

@@ -1,10 +1,8 @@
 import React, { useState } from 'react';
-import { useAuth0 } from '@auth0/auth0-react';
 import { useUser } from '../context/UserContext';
 
 export default function ConnectCanvasModal({ isOpen, onClose }) {
-    const { user } = useAuth0();
-    const { markCanvasConnected, refreshProfile } = useUser();
+    const { markCanvasConnected, refreshProfile, user } = useUser();
 
     const [canvasDomain, setCanvasDomain] = useState('canvas.instructure.com');
     const [canvasToken, setCanvasToken] = useState('');
@@ -23,7 +21,7 @@ export default function ConnectCanvasModal({ isOpen, onClose }) {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    userId: user?.sub,
+                    userId: user?.id,
                     canvasDomain,
                     canvasToken,
                 }),
