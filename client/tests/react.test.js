@@ -1,5 +1,10 @@
 import { render, screen } from '@testing-library/react';
-import App from '../src/App';
+import Home from '../src/pages/Home';
+
+const mockUser = {
+  id: '123',
+  name: 'Student User'
+}
 
 jest.mock('../src/context/UserContext.jsx', () => ({
   useUser: () => ({
@@ -7,20 +12,23 @@ jest.mock('../src/context/UserContext.jsx', () => ({
     hasCanvasToken: true,
     hasSkippedCanvas: false,
     isAuthenticated: true,
-    userData: { id: '123', name: 'Student User' },
+    userData: mockUser,
   }),
 }));
 
 beforeEach(() => {
-  global.fetch = jest.fn(() =>
-    Promise.resolve({
-      ok: true,
-      json: () => Promise.resolve({ text: 'Hello World' }),
-    })
-  );
+  global.fetch = jest.fn((url) => {
+    if (typeof url === 'string' && url.includes('/api/main')) {
+
+      return Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve({ text: 'Hello World' }),
+      });
+    }
+  });
 });
 
 test('renders message from API response', async () => {
-  render(<App />);
+  render(<Home />);
   expect(await screen.findByText('Hello World')).toBeInTheDocument();
 });

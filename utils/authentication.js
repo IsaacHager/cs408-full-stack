@@ -12,6 +12,7 @@ async function login(username, password) {
     const db = mongoose.connection.db;
 
     const userInDb = await db.collection('users').findOne({ name: username });
+
     if (!userInDb) {
         throw new Error(`User with username ${username} not found in the database.`);
     }
