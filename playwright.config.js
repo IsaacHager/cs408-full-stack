@@ -16,7 +16,10 @@ module.exports = defineConfig({
   webServer: {
     command: 'node server/server.js',
     url: 'http://localhost:3000',
-    reuseExistingServer: !process.env.CI,
+    reuseExistingServer: false,
+    env: {
+      MONGODB_URI: '',
+    },
     timeout: 120 * 1000, // 2 minutes
     stdout: 'pipe',
   },

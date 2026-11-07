@@ -1,35 +1,34 @@
 import { render, screen } from '@testing-library/react';
-import App from '../src/App';
+import Home from '../src/pages/Home';
 
-jest.mock('@auth0/auth0-react', () => ({
-  useAuth0: () => ({
-    isAuthenticated: true,
-    isLoading: false,
-    user: { email: 'test@example.com', sub: 'auth0|123' },
-    loginWithRedirect: jest.fn(),
-    logout: jest.fn(),
-  }),
-}));
+const mockUser = {
+  id: '123',
+  name: 'Student User'
+}
 
 jest.mock('../src/context/UserContext.jsx', () => ({
   useUser: () => ({
     loading: false,
     hasCanvasToken: true,
     hasSkippedCanvas: false,
-    userData: { userId: 'auth0|123', email: 'test@example.com' },
+    isAuthenticated: true,
+    userData: mockUser,
   }),
 }));
 
 beforeEach(() => {
-  global.fetch = jest.fn(() =>
-    Promise.resolve({
-      ok: true,
-      json: () => Promise.resolve({ text: 'Hello World' }),
-    })
-  );
+  global.fetch = jest.fn((url) => {
+    if (typeof url === 'string' && url.includes('/api/main')) {
+
+      return Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve({ text: 'Hello World' }),
+      });
+    }
+  });
 });
 
 test('renders message from API response', async () => {
-  render(<App />);
+  render(<Home />);
   expect(await screen.findByText('Hello World')).toBeInTheDocument();
 });

@@ -1,26 +1,29 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useAuth0 } from '@auth0/auth0-react';
+import { useUser } from '../context/UserContext';
+import LoadingSpinner from './LoadingSpinner';
 
 function AddCourseContextMenu({ x, y, visible, onClose, callback }) {
-    const { user } = useAuth0();
     const [allCourses, setAllCourses] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const inputRef = useRef(null);
+    const { user } = useUser();
 
     const handleAddFavorite = async (courseId) => {
         const response = await fetch('/api/canvas/favorites', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ contextUserId: user?.sub, courseIds: [courseId]})
+            body: JSON.stringify({ contextUserId: user?.id, courseIds: [courseId]})
         });
-        if (response.ok) console.log(`Favorited course ${courseId} successfully!`);
+        if (!response.ok) {
+            console.error("Failed to add course to favorites.");
+        }
         if (onClose) onClose();
         if (callback) callback();
     }
 
     useEffect(() => {
-        if (!user?.sub) return;
+        if (!user?.id) return;
         if (!visible) return;
 
         const loadAllUserCourses = async () => {
@@ -31,7 +34,7 @@ function AddCourseContextMenu({ x, y, visible, onClose, callback }) {
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({ userId: user.sub })
+                    body: JSON.stringify({ userId: user.id })
                 });
 
                 if (response.ok) {
@@ -46,7 +49,7 @@ function AddCourseContextMenu({ x, y, visible, onClose, callback }) {
         };
 
         loadAllUserCourses();
-    }, [allCourses, visible]);
+    }, [visible]);
 
     useEffect(() => {
 
@@ -86,6 +89,7 @@ function AddCourseContextMenu({ x, y, visible, onClose, callback }) {
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="p-1 mb-2 w-full text-xs border border-gray-300 rounded outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 bg-white"
             />
+            {loading && <LoadingSpinner />}
             <ul className="overflow-y-auto max-h-[160]">
                 {filteredItems.map(course => (
                     <li key={course.id} className="p-4 border shadow-sm bg-white text-xs" onClick={() => handleAddFavorite(course.id)}>
