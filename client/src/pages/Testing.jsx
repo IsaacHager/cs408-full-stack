@@ -209,6 +209,22 @@ function Testing() {
     }
   }
 
+  function formatBytes(bytes, locale = 'en-US') {
+    if (bytes === 0) return '0 B';
+
+    const units = ['byte', 'kilobyte', 'megabyte', 'gigabyte', 'terabyte', 'petabyte'];
+
+    const i = Math.floor(Math.log(bytes) / Math.log(1024));
+    const value = bytes / Math.pow(1024, i);
+
+    return new Intl.NumberFormat(locale, {
+      style: 'unit',
+      unit: units[i],
+      unitDisplay: 'narrow',
+      maximumFractionDigits: 2
+    }).format(value);
+  }
+
   useEffect(() => {
     const fetchCanvasData = async () => {
       try {
@@ -359,7 +375,7 @@ function Testing() {
                       </p>
                       {file.fileSize &&
                         <p className="text-xs text-slate-400">
-                          {String(file.fileSize)}B
+                          {formatBytes(file.fileSize)}
                         </p>
                       }
                     </div>

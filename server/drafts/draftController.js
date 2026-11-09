@@ -63,12 +63,14 @@ exports.downloadFile = async (req, res) => {
     }
 
     const file = files[0];
+    const downloadName = file.filename || 'downloaded-file';
     res.set('Content-Type', file.contentType || 'application/octet-stream');
-    res.set('Content-Disposition', `attachment; filename="${encodeURIComponent(filename)}"`);
+    res.set('Content-Disposition', `attachment; filename="${encodeURIComponent(downloadName)}"`);
 
     const downloadStream = bucket.openDownloadStream(_id);
     downloadStream.pipe(res);
   } catch (error) {
+    console.log(error.message);
     return res.status(500).json({ error: error.message });
   }
 };
