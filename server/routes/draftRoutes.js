@@ -28,7 +28,7 @@ router.get('/', async (req, res) => {
 
 router.post('/', async (req, res) => {
     try {
-        const { canvasAssignmentId, title, userId } = req.body;
+        const { canvasAssignmentId, canvasCourseId, title, userId } = req.body;
 
         if (!userId) {
             return res.status(400).json({ error: 'User ID required' });
@@ -37,6 +37,7 @@ router.post('/', async (req, res) => {
         const draft = await Draft.create({
             userId,
             canvasAssignmentId,
+            canvasCourseId,
             title: title || `New Draft ${canvasAssignmentId}`,
             todos: [],
             files: []
@@ -261,6 +262,6 @@ router.put('/:draftId/files', upload.single('file'), draftController.addFileToDr
 
 router.get('/:draftId/files/:fileId', draftController.downloadFile);
 
-router.delete('/:draftId/files/:fileId', upload.single('file'), draftController.removeFileFromDraft);
+router.delete('/:draftId/files/:fileId', draftController.removeFileFromDraft);
 
 module.exports = router;

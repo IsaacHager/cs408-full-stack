@@ -20,14 +20,19 @@ function Testing() {
     const form = e.currentTarget;
     const formData = new FormData(form);
     const title = formData.get('title');
-    const assignment = formData.get('assignment');
+    const assignmentId = formData.get('assignment');
     const userId = user?.id;
+
+    const assignment = assignments.find(a => String(a.id) === String(assignmentId));
+    const courseId = assignment.course_id;
+
+    console.log(assignment);
 
     try {
       const response = await fetch(`/api/draft`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ canvasAssignmentId: assignment, title, userId }),
+        body: JSON.stringify({ canvasAssignmentId: assignmentId, canvasCourseId: courseId, title, userId }),
       });
 
       const data = await response.json();
@@ -375,7 +380,7 @@ function Testing() {
                       </p>
                       {file.fileSize &&
                         <p className="text-xs text-slate-400">
-                          {formatBytes(file.fileSize)}
+                          {formatBytes(file.fileSize)} 
                         </p>
                       }
                     </div>

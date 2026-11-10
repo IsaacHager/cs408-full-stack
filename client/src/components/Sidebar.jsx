@@ -11,7 +11,7 @@ function Sidebar() {
         <AccountButton />
         <hr></hr>
         <NavButton to="/search" icon="/magnifying-glass-solid-full.svg" label="Search" />
-        <NavButton to="/" icon="/book-open-solid-full.svg" label="All Drafts" />
+        <NavButton to="/all-drafts" icon="/book-open-solid-full.svg" label="All Drafts" />
         <NavButton to="/" icon="/clipboard-list-solid-full.svg" label="ToDo List" />
         <NavButton to="/" icon="/scroll-solid-full.svg" label="Draft" />
         <NavButton to="/" icon="/paper-plane-solid-full.svg" label="Submit" />

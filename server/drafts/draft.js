@@ -32,6 +32,11 @@ const draftSchema = new mongoose.Schema({
         required: true,
         index: true
     },
+    canvasCourseId: {
+        type: String,
+        required: true,
+        index: true
+    },
     title: {
         type: String,
         required: true,
