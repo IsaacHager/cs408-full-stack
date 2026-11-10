@@ -77,44 +77,6 @@ router.get('/:draftId', async (req, res) => {
 
 });
 
-
-router.delete('/:draftId', async (req, res) => {
-    try {
-        const { userId } = req.query;
-        const { draftId } = req.params;
-
-        if (!userId) {
-            return res.status(400).json({ error: 'User ID required' });
-        }
-
-        const draft = (await Draft.findOne({ _id: draftId, userId })); 
-
-        if (!draft) {
-            return res.status(404).json({ error: 'Draft not found' });
-        }
-
-        if (draft.files && draft.files.length > 0 && global.gfsBucket) {
-            for (const file of draft.files) {
-                if (file.fileId) {
-                    try {
-                        await global.gfsBucket.delete(new mongoose.Types.ObjectId(file.fileId));
-                    } catch (fileErr) {
-                        console.error(`Failed to delete GridFS file ${file.fileId}:`, fileErr);
-                    }
-                }
-            }
-        }
-
-        await Draft.findOneAndDelete({ _id: draftId, userId });
-
-        return res.status(200).json({ message: 'Draft deleted successfully' });
-
-    } catch (error) {
-        return res.status(500).json({ error: error.message });
-    }
-
-});
-
 router.put('/:draftId', async (req, res) => {
     try {
         const { draftId } = req.params;
@@ -153,6 +115,44 @@ router.put('/:draftId', async (req, res) => {
     } catch (error) {
         return res.status(500).json({ error: error.message });
     }
+});
+
+
+router.delete('/:draftId', async (req, res) => {
+    try {
+        const { userId } = req.query;
+        const { draftId } = req.params;
+
+        if (!userId) {
+            return res.status(400).json({ error: 'User ID required' });
+        }
+
+        const draft = (await Draft.findOne({ _id: draftId, userId })); 
+
+        if (!draft) {
+            return res.status(404).json({ error: 'Draft not found' });
+        }
+
+        if (draft.files && draft.files.length > 0 && global.gfsBucket) {
+            for (const file of draft.files) {
+                if (file.fileId) {
+                    try {
+                        await global.gfsBucket.delete(new mongoose.Types.ObjectId(file.fileId));
+                    } catch (fileErr) {
+                        console.error(`Failed to delete GridFS file ${file.fileId}:`, fileErr);
+                    }
+                }
+            }
+        }
+
+        await Draft.findOneAndDelete({ _id: draftId, userId });
+
+        return res.status(200).json({ message: 'Draft deleted successfully' });
+
+    } catch (error) {
+        return res.status(500).json({ error: error.message });
+    }
+
 });
 
 router.post('/:draftId/todos', async (req, res) => {

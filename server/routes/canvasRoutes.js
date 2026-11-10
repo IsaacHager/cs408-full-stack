@@ -189,6 +189,43 @@ router.get('/assignments/:courseId/:assignmentId', async (req, res) => {
     }
 });
 
+
+router.get('/assignments/:courseId/:assignmentId/submissions', async (req, res) => {
+    const { userId } = req.query;
+    const { courseId, assignmentId } = req.params;
+
+    if (!userId) {
+        return res.status(400).json({ error: 'Missing userId parameter.' });
+    }
+
+    try {
+        const submissionData = await makeAPIGetRequest(userId, `/api/v1/courses/${courseId}/assignments/${assignmentId}/submissions/self`);
+
+        const course = await makeAPIGetRequest(userId, `/api/v1/courses/${courseId}`);
+
+        const submission = {
+            ...submissionData,
+
+            course_name: course.name || 'Unknown Class',
+            course_code: course.course_code
+        };
+
+        return res.json(submission);
+    } catch (error) {
+        if (error.message?.includes('404')) {
+            return res.json({ 
+                workflow_state: 'unsubmitted', 
+                score: null, 
+                grade: null,
+                submission_comments: [] 
+            });
+        }
+
+        console.error('Error in /api/assignments/submission: ', error);
+        res.status(500).json({ error: 'Failed to load submission data.' });
+    }
+});
+
 router.post('/connect', async (req, res) => {
     const { userId, canvasDomain, canvasToken } = req.body;
 
