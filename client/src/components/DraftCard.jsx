@@ -3,11 +3,13 @@ import { useUser } from '../context/UserContext';
 
 function DraftCard({ draft }) {
     const [assignment, setAssignment] = useState(null);
-    const [nextTask, setNextTask] = useState(null);
     const { user } = useUser();
     const useButton = false;
 
-    const progress = draft?.todos?.find(t => !t.isCompleted) || 0;
+    const parentTasks = draft?.todos?.filter(t => (t.parentId === null || !t.parentId));
+    const completedTasks = parentTasks?.filter(t => t.isCompleted).length || 0;
+    const progress = Math.trunc((completedTasks * 100) / parentTasks.length);
+    const nextTask = parentTasks?.find(t => !t.isCompleted);
 
     useEffect(() => {
         if (!user?.id || !draft?.canvasCourseId || !draft?.canvasAssignmentId) {

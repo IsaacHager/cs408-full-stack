@@ -159,7 +159,7 @@ router.post('/:draftId/todos', async (req, res) => {
     try {
         const { draftId } = req.params;
         const { userId } = req.query;
-        const { task, parentId, timeMinutes, isCompleted } = req.body;
+        const { task, parentId, timeMinutes } = req.body;
 
 
         if (!userId) {
@@ -205,22 +205,22 @@ router.put('/:draftId/todos/:taskId', async (req, res) => {
             return res.status(400).json({ error: 'User ID required' });
         }
 
-        const updateFields = {};
-
-        if (task !== undefined) updateFields['todos.$.task'] = task;
-        if (parentId !== undefined) updateFields['todos.$.parentId'] = parentId;
-        if (timeMinutes !== undefined) updateFields['todos.$.timeMinutes'] = Number(timeMinutes) || 0;
-        if (isCompleted !== undefined) updateFields['todos.$.isCompleted'] = isCompleted;
-
-        const draft = await Draft.findOneAndUpdate(
-            { _id: draftId, userId, 'todos._id': taskId },
-            { $set: updateFields },
-            { new: true, runValidators: true }
-        );
-
+        const draft = await Draft.findOne({ _id: draftId, userId });
         if (!draft) {
-            return res.status(404).json({ error: 'Draft or Task not found' });
+            return res.status(404).json({ error: 'Draft not found' });
         }
+
+        const todo = draft.todos.id(taskId);
+        if (!todo) {
+            return res.status(404).json({ error: 'Task not found' });
+        }
+
+        if (task !== undefined) todo.task = task;
+        if (parentId !== undefined) todo.parentId = parentId;
+        if (timeMinutes !== undefined) todo.timeMinutes = Number(timeMinutes) || 0;
+        if (isCompleted !== undefined) todo.isCompleted = isCompleted;
+
+        await draft.save();
 
         return res.status(200).json({ data: draft });
     } catch (error) {

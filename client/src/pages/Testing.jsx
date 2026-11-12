@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useUser } from '../context/UserContext';
 import '../App.css';
-import NewTaskModal from '../components/EditTaskModal';
+import EditTaskModal from '../components/EditTaskModal';
 
 function Testing() {
   const [assignments, setAssignments] = useState([]);
@@ -474,8 +474,8 @@ function Testing() {
           }
         </div>
       </div>
-      <NewTaskModal
-        taskId={editTask?._id}
+      <EditTaskModal
+        task={editTask}
         draftId={currentDraft?._id}
         parentId={null}
         isOpen={isModalOpen}
