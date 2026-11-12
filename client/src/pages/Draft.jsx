@@ -4,6 +4,9 @@ import { useUser } from '../context/UserContext';
 import { extractCanvasResources } from '../../../utils/htmlParsing.js';
 import parse, { domToReact } from 'html-react-parser';
 import ToDoBar from '../components/ToDoBar';
+import FileBrowseButton from '../components/FileBrowseButton';
+import XButton from '../components/XButton';
+import LoadingSpinner from '../components/LoadingSpinner';
 import '../App.css';
 
 function Draft() {
@@ -15,6 +18,7 @@ function Draft() {
     const [files, setFiles] = useState([]);
     const [links, setLinks] = useState([]);
     const [refreshDraft, setRefreshDraft] = useState(0);
+    const [fileUploading, setFileUploading] = useState(false);
 
     const options = {
         replace: (domNode) => {
@@ -36,6 +40,61 @@ function Draft() {
             }
         },
     };
+
+
+
+    async function uploadFile(file) {
+        if (!file || !draft?._id || !user?.id) return;
+
+        setFileUploading(true);
+
+        const formData = new FormData();
+        formData.append('file', file);
+        const userId = user?.id;
+
+        try {
+            const response = await fetch(`/api/draft/${draft._id}/files?userId=${userId}`, {
+                method: 'PUT',
+                body: formData,
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error);
+            }
+
+            setRefreshDraft(prev => prev + 1);
+            setFileUploading(false);
+
+        } catch (error) {
+            console.error('Error updating draft:', error);
+        }
+    }
+
+    async function handleDeleteFile(fileId) {
+        if (!draft?._id || !user?.id) return;
+
+        try {
+            setFileUploading(true);
+            const response = await fetch(
+                `/api/draft/${draft._id}/files/${fileId}?userId=${user.id}`,
+                { method: 'DELETE' }
+            );
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || 'Failed to delete file');
+            }
+
+            setRefreshDraft(prev => prev + 1);
+            setFileUploading(false);
+
+        } catch (error) {
+            console.error('Error deleting file:', error);
+        }
+    }
 
     useEffect(() => {
         if (!user?.id || !draftId) return;
@@ -137,35 +196,45 @@ function Draft() {
                     ))
                 )}
             </div>
-            <div className="w-full p-5 border border-2 border-slate-600 bg-slate-600 text-white flex flex-wrap items-center gap-x-2 gap-y-2 text-lg">
-                <span>
-                    Draft Resources:
-                </span>
-
-                {draft?.files.length === 0 ? (
-                    <span className="text-zinc-300 italic text-base">
-                        None
+            <div className="w-full p-5 border border-2 border-slate-600 bg-slate-600 text-white">
+                <div className="flex flex-wrap items-center gap-x-2 gap-y-2 text-lg">
+                    <span>
+                        Draft Resources:
                     </span>
-                ) : (
-                    draft?.files.map((item, index, array) => (
-                        <span key={item.fileId || index} className="inline-flex items-center gap-2">
-                            <a
-                                href={`/api/draft/${draft?._id}/files/${item.fileId}`}
-                                download={item.fileName || true}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-blue-400 font-medium hover:underline"
-                            >
-                                {item.fileName}
-                            </a>
-                            {index < array.length - 1 && (
-                                <span className="text-zinc-300 font-normal">
-                                    ;
-                                </span>
-                            )}
+
+                    {draft?.files.length === 0 ? (
+                        <span className="text-zinc-300 italic text-base">
+                            None
                         </span>
-                    ))
-                )}
+                    ) : (
+                        draft?.files.map((item, index, array) => (
+                            <span key={item.fileId || index} className="inline-flex items-center gap-2">
+                                <a
+                                    href={`/api/draft/${draft?._id}/files/${item.fileId}`}
+                                    download={item.fileName || true}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-blue-400 font-medium hover:underline"
+                                >
+                                    {item.fileName}
+                                </a>
+                                <XButton onClick={() => handleDeleteFile(item.fileId)} />
+                                {index < array.length - 1 && (
+                                    <span className="text-zinc-300 font-normal">
+                                        ;
+                                    </span>
+                                )}
+                            </span>
+                        ))
+                    )}
+
+                    {fileUploading &&
+                        <LoadingSpinner />
+                    }
+                </div>
+                <FileBrowseButton
+                    onFileSelect={uploadFile}
+                />
             </div>
         </div>
     );

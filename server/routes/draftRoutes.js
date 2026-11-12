@@ -215,10 +215,10 @@ router.put('/:draftId/todos/:taskId', async (req, res) => {
             return res.status(404).json({ error: 'Task not found' });
         }
 
-        if (task !== undefined) todo.task = task;
-        if (parentId !== undefined) todo.parentId = parentId;
-        if (timeMinutes !== undefined) todo.timeMinutes = Number(timeMinutes) || 0;
-        if (isCompleted !== undefined) todo.isCompleted = isCompleted;
+        if (task !== undefined && task !== null) todo.task = task;
+        if (parentId !== undefined && parentId !== null) todo.parentId = parentId;
+        if (timeMinutes !== undefined && timeMinutes !== null) todo.timeMinutes = Number(timeMinutes) || 0;
+        if (isCompleted !== undefined && isCompleted !== null) todo.isCompleted = isCompleted;
 
         await draft.save();
 

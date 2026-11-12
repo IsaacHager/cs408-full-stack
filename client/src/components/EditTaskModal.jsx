@@ -8,26 +8,20 @@ export default function EditTaskModal({ task, draftId, parentId, isOpen, onClose
     const [taskName, setTaskName] = useState(task?.task || '');
     const [timeMinutes, setTimeMinutes] = useState(task?.timeMinutes || 0);
     const [isCompleted, setIsCompleted] = useState(task?.isCompleted || false);
+    const [isModalOpen, setIsModalOpen] = useState(false);
 
     const taskId = task?._id;
-
-    useEffect(() => {
-        if (isOpen) {
-            setTaskName(task?.task || '');
-            setTimeMinutes(task?.timeMinutes || 0);
-            setIsCompleted(Boolean(task?.isCompleted));
-            setError(null);
-        }
-    }, [task, isOpen]);
-
-    if (!isOpen || !draftId) return null;
+    const insert = !taskId;
+    
+    async function handleCloseModal() {
+        setIsModalOpen(false);
+        onClose();
+    }
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setSubmitting(true);
         setError(null);
-
-        const insert = !taskId;
 
         if (insert && taskName === '') {
             throw new Error("Task description cannot be empty");
@@ -42,6 +36,7 @@ export default function EditTaskModal({ task, draftId, parentId, isOpen, onClose
                     body: JSON.stringify({
                         task: taskName,
                         timeMinutes,
+                        parentId,
                     }),
                 });
             } else {
@@ -51,6 +46,7 @@ export default function EditTaskModal({ task, draftId, parentId, isOpen, onClose
                     body: JSON.stringify({
                         task: taskName,
                         timeMinutes,
+                        parentId,
                         isCompleted,
                     }),
                 });
@@ -69,6 +65,17 @@ export default function EditTaskModal({ task, draftId, parentId, isOpen, onClose
             setSubmitting(false);
         }
     };
+
+    useEffect(() => {
+        if (isOpen) {
+            setTaskName(task?.task || '');
+            setTimeMinutes(task?.timeMinutes || 0);
+            setIsCompleted(Boolean(task?.isCompleted));
+            setError(null);
+        }
+    }, [task, isOpen]);
+
+    if (!isOpen || !draftId) return null;
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 backdrop-blur-sm p-4">
@@ -132,6 +139,16 @@ export default function EditTaskModal({ task, draftId, parentId, isOpen, onClose
                         </div>
                     }
 
+                    {!insert &&
+                        <button
+                            type="button"
+                            onClick={() => setIsModalOpen(true)}
+                            className="tactile-button !w-[200px]"
+                        >
+                            Add Subtask
+                        </button>
+                    }
+
                     <div className="flex items-center justify-end gap-3 pt-2">
                         <button
                             type="button"
@@ -146,11 +163,18 @@ export default function EditTaskModal({ task, draftId, parentId, isOpen, onClose
                             disabled={submitting}
                             className="px-4 py-2 gb-slate-600 disabled:opacity-50 text-white font-semibold text-xs transition"
                         >
-                            {submitting ? 'Adding...' : 'Add'}
+                            {submitting ? 'Saving...' : 'Confirm'}
                         </button>
                     </div>
                 </form>
             </div>
+            <EditTaskModal
+                task={null}
+                draftId={draftId}
+                parentId={taskId}
+                isOpen={isModalOpen}
+                onClose={handleCloseModal}
+            />
         </div>
     );
 }

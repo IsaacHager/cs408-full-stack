@@ -1,3 +1,5 @@
+import XButton from './XButton';
+
 function ToDoTask({ task, allTasks, toggleCollapse, collapsedTasks, handleToggleTask, handleEditTask, handleDeleteTask }) {
     const isCollapsed = Boolean(collapsedTasks[task._id]);
     const subtasks = allTasks?.filter((t) => t.parentId && String(t.parentId) === String(task._id));
@@ -63,16 +65,7 @@ function ToDoTask({ task, allTasks, toggleCollapse, collapsedTasks, handleToggle
                         }
                     </div>
                 </div>
-                <button
-                    type="button"
-                    onClick={() => handleDeleteTask(task._id)}
-                    className="p-1 text-slate-400 hover:text-red-400 hover:bg-slate-700 transition-colors"
-                    title="Remove file"
-                >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                </button>
+                <XButton onClick={() => handleDeleteTask(task._id)} />
             </div>
             {hasSubtasks && !isCollapsed && (
                 <ul className="pl-3 divide-y divide-slate-300 bg-slate-400">

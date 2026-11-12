@@ -2,17 +2,21 @@ import { useState, useEffect } from 'react';
 import { useUser } from '../context/UserContext';
 import ToDoTask from './ToDoTask';
 import EditTaskModal from './EditTaskModal';
+import LoadingSpinner from './LoadingSpinner';
 
 function ToDoBar({ draftId, todos, setRefreshDraft }) {
     const [collapsedTasks, setCollapsedTasks] = useState({});
     const [editTask, setEditTask] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [loading, setLoading] = useState(false);
     const { user } = useUser();
 
     async function handleCloseModal() {
+        setLoading(true);
         setIsModalOpen(false);
         setRefreshDraft(prev => prev + 1);
         setEditTask(null);
+        setLoading(false);
     }
 
     const toggleCollapse = (taskId) => {
@@ -52,6 +56,7 @@ function ToDoBar({ draftId, todos, setRefreshDraft }) {
         if (!draftId || !user?.id) return;
 
         try {
+            setLoading(true);
             const getAllDescendantIds = (id) => {
                 const directChildren = (todos || []).filter(
                     (t) => t.parentId && String(t.parentId) === String(id)
@@ -79,6 +84,7 @@ function ToDoBar({ draftId, todos, setRefreshDraft }) {
             await Promise.all(deletePromises);
 
             setRefreshDraft(prev => prev + 1);
+            setLoading(false);
 
         } catch (error) {
             console.error('Error recursively deleting task: ', error);
@@ -90,12 +96,25 @@ function ToDoBar({ draftId, todos, setRefreshDraft }) {
         setIsModalOpen(true);
     }
 
+    async function handleAddTask() {
+        setEditTask(null);
+        setIsModalOpen(true);
+    }
+
     const parentTasks = todos?.filter((t) => !t.parentId);
 
     return (
-        <aside className="bg-slate-400 border-2 border-slate-600 p-2 w-[35%]">
-            ToDo: {todos?.length || 0} Task{todos?.length === 1 ? '' : 's' || 's'}
-            <ul className="divide-y divide-slate-300 bg-slate-200">
+        <aside className="bg-slate-400 border-2 border-slate-600 p-2 w-[35%] space-y-2">
+            <div className="flex flex-row justify-between">
+                ToDo: {todos?.length || 0} Task{todos?.length === 1 ? '' : 's' || 's'}
+                <button
+                    onClick={handleAddTask}
+                    className="tactile-button !w-6 !h-6 pb-1"
+                >
+                    +
+                </button>
+            </div>
+            <ul className="divide-y divide-slate-300 bg-slate-200 mt-2">
                 {parentTasks?.map((task, index) => (
                     <ToDoTask
                         key={task._id || index}
@@ -109,6 +128,9 @@ function ToDoBar({ draftId, todos, setRefreshDraft }) {
                     />
                 ))}
             </ul>
+            {loading &&
+                <LoadingSpinner />
+            }
 
             <EditTaskModal
                 task={editTask}
