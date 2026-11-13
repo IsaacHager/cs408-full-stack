@@ -16,6 +16,7 @@
     "@mui/material": "^9.5.0",
     "@mui/x-data-grid": "^9.17.0",
     "cs408-full-stack": "file:..",
+    "dompurify": "^3.4.17",
     "html-react-parser": "^6.1.9",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
