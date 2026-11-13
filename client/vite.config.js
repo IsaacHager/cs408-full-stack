@@ -15,5 +15,10 @@ export default defineConfig(({ mode }) => {
         '/api': `http://localhost:${backendPort}`,
       },
     },
+    resolve: {
+      alias: {
+        dompurify: path.resolve(__dirname, 'node_modules/dompurify'),
+      },
+    },
   }
 })
