@@ -9,6 +9,8 @@ import Profile from './pages/Profile.jsx'
 import Courses from './pages/Courses.jsx';
 import Search from './pages/Search.jsx';
 import Testing from './pages/Testing.jsx'
+import AllDrafts from './pages/AllDrafts.jsx'
+import Draft from './pages/Draft.jsx'
 import LoadingSpinner from './components/LoadingSpinner.jsx';
 import GuardedRoute from './components/GuardedRoute.jsx'
 
@@ -26,15 +28,17 @@ function App() {
           <>
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
-            <Route path="*" element={<Login />} />
+            <Route path="*" element={<Navigate to="/login" replace />} />
           </>
         ) : (
         <Route path="/" element={<GuardedRoute><Layout /></GuardedRoute>}>
           <Route index element={<GuardedRoute><Home /></GuardedRoute>} />
           <Route path="/profile" element={<GuardedRoute><Profile /></GuardedRoute>} />
           <Route path="/search" element={<GuardedRoute><Search /></GuardedRoute>} />
+          <Route path="/all-drafts" element={<GuardedRoute><AllDrafts /></GuardedRoute>} />
           <Route path="/courses" element={<GuardedRoute><Courses /></GuardedRoute>} />
           <Route path="/testing" element={<GuardedRoute><Testing /></GuardedRoute>} />
+          <Route path="/draft/:draftId" element={<GuardedRoute><Draft /></GuardedRoute>} />
           <Route path="/login" element={<Navigate to="/" />} />
           <Route path="/signup" element={<Navigate to="/" />} />
         </Route>

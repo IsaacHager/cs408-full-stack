@@ -9,7 +9,6 @@ export function UserProvider({ children }) {
     });
 
     const [loading, setLoading] = useState(false);
-    const [hasSkippedCanvas, setHasSkippedCanvas] = useState(false);
 
     const fetchUserProfile = async () => {
         if (!userData?.id) return;
@@ -43,10 +42,6 @@ export function UserProvider({ children }) {
         }));
     };
 
-    const skipCanvasPrompt = () => {
-        setHasSkippedCanvas(true);
-    };
-
     const loginUser = async (data) => {
         setLoading(true);
         setUserData(data);
@@ -74,9 +69,7 @@ export function UserProvider({ children }) {
                 loading: loading,
                 hasCanvasToken: !!userData?.hasCanvasToken,
                 isAuthenticated: !!userData,
-                hasSkippedCanvas,
                 markCanvasConnected,
-                skipCanvasPrompt,
                 loginUser,
                 logoutUser,
                 refreshProfile: fetchUserProfile,

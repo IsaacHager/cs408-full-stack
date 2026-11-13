@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useUser } from '../context/UserContext';
 import '../App.css';
-import NewTaskModal from '../components/EditTaskModal';
+import EditTaskModal from '../components/EditTaskModal';
 
 function Testing() {
   const [assignments, setAssignments] = useState([]);
@@ -20,14 +20,17 @@ function Testing() {
     const form = e.currentTarget;
     const formData = new FormData(form);
     const title = formData.get('title');
-    const assignment = formData.get('assignment');
+    const assignmentId = formData.get('assignment');
     const userId = user?.id;
+
+    const assignment = assignments.find(a => String(a.id) === String(assignmentId));
+    const courseId = assignment.course_id;
 
     try {
       const response = await fetch(`/api/draft`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ canvasAssignmentId: assignment, title, userId }),
+        body: JSON.stringify({ canvasAssignmentId: assignmentId, canvasCourseId: courseId, title, userId }),
       });
 
       const data = await response.json();
@@ -209,6 +212,22 @@ function Testing() {
     }
   }
 
+  function formatBytes(bytes, locale = 'en-US') {
+    if (bytes === 0) return '0 B';
+
+    const units = ['byte', 'kilobyte', 'megabyte', 'gigabyte', 'terabyte', 'petabyte'];
+
+    const i = Math.floor(Math.log(bytes) / Math.log(1024));
+    const value = bytes / Math.pow(1024, i);
+
+    return new Intl.NumberFormat(locale, {
+      style: 'unit',
+      unit: units[i],
+      unitDisplay: 'narrow',
+      maximumFractionDigits: 2
+    }).format(value);
+  }
+
   useEffect(() => {
     const fetchCanvasData = async () => {
       try {
@@ -359,7 +378,7 @@ function Testing() {
                       </p>
                       {file.fileSize &&
                         <p className="text-xs text-slate-400">
-                          {String(file.fileSize)}B
+                          {formatBytes(file.fileSize)} 
                         </p>
                       }
                     </div>
@@ -453,8 +472,8 @@ function Testing() {
           }
         </div>
       </div>
-      <NewTaskModal
-        taskId={editTask?._id}
+      <EditTaskModal
+        task={editTask}
         draftId={currentDraft?._id}
         parentId={null}
         isOpen={isModalOpen}

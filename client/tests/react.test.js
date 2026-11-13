@@ -10,7 +10,6 @@ jest.mock('../src/context/UserContext.jsx', () => ({
   useUser: () => ({
     loading: false,
     hasCanvasToken: true,
-    hasSkippedCanvas: false,
     isAuthenticated: true,
     userData: mockUser,
   }),

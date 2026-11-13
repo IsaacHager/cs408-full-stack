@@ -1,24 +1,29 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useUser } from '../context/UserContext';
 
-export default function NewTaskModal({ taskId, draftId, parentId, isOpen, onClose }) {
+export default function EditTaskModal({ task, draftId, parentId, isOpen, onClose }) {
     const { user } = useUser();
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState(null);
-    const [task, setTask] = useState(taskId?.task || '');
-    const [timeMinutes, setTimeMinutes] = useState(taskId?.timeMinutes || 0);
-    const [isCompleted, setIsCompleted] = useState(taskId?.isCompleted || false);
+    const [taskName, setTaskName] = useState(task?.task || '');
+    const [timeMinutes, setTimeMinutes] = useState(task?.timeMinutes || 0);
+    const [isCompleted, setIsCompleted] = useState(task?.isCompleted || false);
+    const [isModalOpen, setIsModalOpen] = useState(false);
 
-    if (!isOpen || !draftId) return null;
+    const taskId = task?._id;
+    const insert = !taskId;
+    
+    async function handleCloseModal() {
+        setIsModalOpen(false);
+        onClose();
+    }
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setSubmitting(true);
         setError(null);
 
-        const insert = !taskId;
-
-        if (insert && task === '') {
+        if (insert && taskName === '') {
             throw new Error("Task description cannot be empty");
         }
 
@@ -29,9 +34,9 @@ export default function NewTaskModal({ taskId, draftId, parentId, isOpen, onClos
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        task,
-                        parentId,
+                        task: taskName,
                         timeMinutes,
+                        parentId,
                     }),
                 });
             } else {
@@ -39,9 +44,9 @@ export default function NewTaskModal({ taskId, draftId, parentId, isOpen, onClos
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        task,
-                        parentId,
+                        task: taskName,
                         timeMinutes,
+                        parentId,
                         isCompleted,
                     }),
                 });
@@ -60,6 +65,17 @@ export default function NewTaskModal({ taskId, draftId, parentId, isOpen, onClos
             setSubmitting(false);
         }
     };
+
+    useEffect(() => {
+        if (isOpen) {
+            setTaskName(task?.task || '');
+            setTimeMinutes(task?.timeMinutes || 0);
+            setIsCompleted(Boolean(task?.isCompleted));
+            setError(null);
+        }
+    }, [task, isOpen]);
+
+    if (!isOpen || !draftId) return null;
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 backdrop-blur-sm p-4">
@@ -89,9 +105,8 @@ export default function NewTaskModal({ taskId, draftId, parentId, isOpen, onClos
                         </label>
                         <input
                             type="text"
-                            required
-                            value={task}
-                            onChange={(e) => setTask(e.target.value)}
+                            value={taskName}
+                            onChange={(e) => setTaskName(e.target.value)}
                             placeholder="e.g. Make outline"
                             className="w-full px-3 py-2 bg-slate-900 border border-slate-700 text-sm text-white placeholder-slate-500"
                         />
@@ -124,6 +139,16 @@ export default function NewTaskModal({ taskId, draftId, parentId, isOpen, onClos
                         </div>
                     }
 
+                    {!insert &&
+                        <button
+                            type="button"
+                            onClick={() => setIsModalOpen(true)}
+                            className="tactile-button !w-[200px]"
+                        >
+                            Add Subtask
+                        </button>
+                    }
+
                     <div className="flex items-center justify-end gap-3 pt-2">
                         <button
                             type="button"
@@ -138,11 +163,18 @@ export default function NewTaskModal({ taskId, draftId, parentId, isOpen, onClos
                             disabled={submitting}
                             className="px-4 py-2 gb-slate-600 disabled:opacity-50 text-white font-semibold text-xs transition"
                         >
-                            {submitting ? 'Adding...' : 'Add'}
+                            {submitting ? 'Saving...' : 'Confirm'}
                         </button>
                     </div>
                 </form>
             </div>
+            <EditTaskModal
+                task={null}
+                draftId={draftId}
+                parentId={taskId}
+                isOpen={isModalOpen}
+                onClose={handleCloseModal}
+            />
         </div>
     );
 }

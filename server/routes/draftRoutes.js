@@ -28,7 +28,7 @@ router.get('/', async (req, res) => {
 
 router.post('/', async (req, res) => {
     try {
-        const { canvasAssignmentId, title, userId } = req.body;
+        const { canvasAssignmentId, canvasCourseId, title, userId } = req.body;
 
         if (!userId) {
             return res.status(400).json({ error: 'User ID required' });
@@ -37,6 +37,7 @@ router.post('/', async (req, res) => {
         const draft = await Draft.create({
             userId,
             canvasAssignmentId,
+            canvasCourseId,
             title: title || `New Draft ${canvasAssignmentId}`,
             todos: [],
             files: []
@@ -69,44 +70,6 @@ router.get('/:draftId', async (req, res) => {
         }
 
         return res.status(200).json(draft);
-
-    } catch (error) {
-        return res.status(500).json({ error: error.message });
-    }
-
-});
-
-
-router.delete('/:draftId', async (req, res) => {
-    try {
-        const { userId } = req.query;
-        const { draftId } = req.params;
-
-        if (!userId) {
-            return res.status(400).json({ error: 'User ID required' });
-        }
-
-        const draft = (await Draft.findOne({ _id: draftId, userId })); 
-
-        if (!draft) {
-            return res.status(404).json({ error: 'Draft not found' });
-        }
-
-        if (draft.files && draft.files.length > 0 && global.gfsBucket) {
-            for (const file of draft.files) {
-                if (file.fileId) {
-                    try {
-                        await global.gfsBucket.delete(new mongoose.Types.ObjectId(file.fileId));
-                    } catch (fileErr) {
-                        console.error(`Failed to delete GridFS file ${file.fileId}:`, fileErr);
-                    }
-                }
-            }
-        }
-
-        await Draft.findOneAndDelete({ _id: draftId, userId });
-
-        return res.status(200).json({ message: 'Draft deleted successfully' });
 
     } catch (error) {
         return res.status(500).json({ error: error.message });
@@ -154,11 +117,49 @@ router.put('/:draftId', async (req, res) => {
     }
 });
 
+
+router.delete('/:draftId', async (req, res) => {
+    try {
+        const { userId } = req.query;
+        const { draftId } = req.params;
+
+        if (!userId) {
+            return res.status(400).json({ error: 'User ID required' });
+        }
+
+        const draft = (await Draft.findOne({ _id: draftId, userId })); 
+
+        if (!draft) {
+            return res.status(404).json({ error: 'Draft not found' });
+        }
+
+        if (draft.files && draft.files.length > 0 && global.gfsBucket) {
+            for (const file of draft.files) {
+                if (file.fileId) {
+                    try {
+                        await global.gfsBucket.delete(new mongoose.Types.ObjectId(file.fileId));
+                    } catch (fileErr) {
+                        console.error(`Failed to delete GridFS file ${file.fileId}:`, fileErr);
+                    }
+                }
+            }
+        }
+
+        await Draft.findOneAndDelete({ _id: draftId, userId });
+
+        return res.status(200).json({ message: 'Draft deleted successfully' });
+
+    } catch (error) {
+        return res.status(500).json({ error: error.message });
+    }
+
+});
+
 router.post('/:draftId/todos', async (req, res) => {
     try {
         const { draftId } = req.params;
         const { userId } = req.query;
-        const { task, parentId, timeMinutes, isCompleted } = req.body;
+        const { task, parentId, timeMinutes } = req.body;
 
 
         if (!userId) {
@@ -204,22 +205,22 @@ router.put('/:draftId/todos/:taskId', async (req, res) => {
             return res.status(400).json({ error: 'User ID required' });
         }
 
-        const updateFields = {};
-
-        if (task !== undefined) updateFields['todos.$.task'] = task;
-        if (parentId !== undefined) updateFields['todos.$.parentId'] = parentId;
-        if (timeMinutes !== undefined) updateFields['todos.$.timeMinutes'] = Number(timeMinutes) || 0;
-        if (isCompleted !== undefined) updateFields['todos.$.isCompleted'] = isCompleted;
-
-        const draft = await Draft.findOneAndUpdate(
-            { _id: draftId, userId, 'todos._id': taskId },
-            { $set: updateFields },
-            { new: true, runValidators: true }
-        );
-
+        const draft = await Draft.findOne({ _id: draftId, userId });
         if (!draft) {
-            return res.status(404).json({ error: 'Draft or Task not found' });
+            return res.status(404).json({ error: 'Draft not found' });
         }
+
+        const todo = draft.todos.id(taskId);
+        if (!todo) {
+            return res.status(404).json({ error: 'Task not found' });
+        }
+
+        if (task !== undefined && task !== null) todo.task = task;
+        if (parentId !== undefined && parentId !== null) todo.parentId = parentId;
+        if (timeMinutes !== undefined && timeMinutes !== null) todo.timeMinutes = Number(timeMinutes) || 0;
+        if (isCompleted !== undefined && isCompleted !== null) todo.isCompleted = isCompleted;
+
+        await draft.save();
 
         return res.status(200).json({ data: draft });
     } catch (error) {
@@ -261,6 +262,6 @@ router.put('/:draftId/files', upload.single('file'), draftController.addFileToDr
 
 router.get('/:draftId/files/:fileId', draftController.downloadFile);
 
-router.delete('/:draftId/files/:fileId', upload.single('file'), draftController.removeFileFromDraft);
+router.delete('/:draftId/files/:fileId', draftController.removeFileFromDraft);
 
 module.exports = router;

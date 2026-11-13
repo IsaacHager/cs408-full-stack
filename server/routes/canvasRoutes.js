@@ -5,7 +5,7 @@ const { makeAPIGetRequest, makeAPIPostRequest, makeAPIDeleteRequest, getCanvasDo
 const { encryptToken } = require('../../utils/encryption');
 
 router.get('/domain', async (req, res) => {
-    const {userId } = req.query;
+    const { userId } = req.query;
 
     try {
         const canvasDomain = await getCanvasDomain(userId);
@@ -128,7 +128,10 @@ router.get('/assignments', async (req, res) => {
 
         const courseLookup = {};
         courses.forEach(c => {
-            courseLookup[c.id] = c.name || c.course_code || `Course ${c.id}`;
+            courseLookup[c.id] = {
+                name: c.name,
+                code: c.course_code,
+            }
         });
 
         const assignmentsPromises = courses.map(course =>
@@ -140,13 +143,14 @@ router.get('/assignments', async (req, res) => {
         const flatAssignments = assignmentsArrays.flat();
 
         const cleanData = flatAssignments.map((item, index) => {
-            const realId = item.id || (item.assignment && item.assignment.id);
+            const realId = item.id || item.assignment?.id;
 
             return {
                 ...item,
                 id: realId ? String(realId) : `fallback-row-id-${index}`,
 
-                course_name: courseLookup[item.course_id] || 'Unknown Class'
+                course_name: courseLookup[item.course_id].name || 'Unknown Class',
+                course_code: courseLookup[item.course_id].code
             };
         });
 
@@ -154,6 +158,71 @@ router.get('/assignments', async (req, res) => {
     } catch (error) {
         console.error('Error in /api/assignments: ', error);
         res.status(500).json({ error: 'Failed to load assignment data.' });
+    }
+});
+
+router.get('/assignments/:courseId/:assignmentId', async (req, res) => {
+    const { userId } = req.query;
+    const { courseId, assignmentId } = req.params;
+
+    if (!userId) {
+        return res.status(400).json({ error: 'Missing userId parameter.' });
+    }
+
+    try {
+        const assignmentData = await makeAPIGetRequest(userId, `/api/v1/courses/${courseId}/assignments/${assignmentId}`);
+
+        const course = await makeAPIGetRequest(userId, `/api/v1/courses/${courseId}`);
+
+        const assignment = {
+            ...assignmentData,
+            id: assignmentId,
+
+            course_name: course.name || 'Unknown Class',
+            course_code: course.course_code
+        };
+
+        return res.json(assignment);
+    } catch (error) {
+        console.error('Error in /api/assignments: ', error);
+        res.status(500).json({ error: 'Failed to load assignment data.' });
+    }
+});
+
+
+router.get('/assignments/:courseId/:assignmentId/submissions', async (req, res) => {
+    const { userId } = req.query;
+    const { courseId, assignmentId } = req.params;
+
+    if (!userId) {
+        return res.status(400).json({ error: 'Missing userId parameter.' });
+    }
+
+    try {
+        const submissionData = await makeAPIGetRequest(userId, `/api/v1/courses/${courseId}/assignments/${assignmentId}/submissions/self`);
+
+        const course = await makeAPIGetRequest(userId, `/api/v1/courses/${courseId}`);
+
+        const submission = {
+            ...submissionData,
+
+            course_name: course.name || 'Unknown Class',
+            course_code: course.course_code
+        };
+
+        return res.json(submission);
+    } catch (error) {
+        if (error.message?.includes('404')) {
+            return res.json({ 
+                workflow_state: 'unsubmitted', 
+                score: null, 
+                grade: null,
+                submission_comments: [] 
+            });
+        }
+
+        console.error('Error in /api/assignments/submission: ', error);
+        res.status(500).json({ error: 'Failed to load submission data.' });
     }
 });
 
