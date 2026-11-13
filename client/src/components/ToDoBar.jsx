@@ -30,6 +30,7 @@ function ToDoBar({ draftId, todos, setRefreshDraft }) {
         if (!draftId || !user?.id) return;
 
         try {
+            setLoading(true);
             const response = await fetch(
                 `/api/draft/${draftId}/todos/${taskId}?userId=${user.id}`,
                 {
@@ -46,6 +47,7 @@ function ToDoBar({ draftId, todos, setRefreshDraft }) {
             }
 
             setRefreshDraft(prev => prev + 1);
+            setLoading(false);
 
         } catch (error) {
             console.error('Error toggling task:', error);

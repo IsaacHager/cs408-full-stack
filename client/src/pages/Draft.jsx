@@ -19,6 +19,7 @@ function Draft() {
     const [links, setLinks] = useState([]);
     const [refreshDraft, setRefreshDraft] = useState(0);
     const [fileUploading, setFileUploading] = useState(false);
+    const [pageLoading, setPageLoading] = useState(false);
 
     const options = {
         replace: (domNode) => {
@@ -40,8 +41,6 @@ function Draft() {
             }
         },
     };
-
-
 
     async function uploadFile(file) {
         if (!file || !draft?._id || !user?.id) return;
@@ -99,6 +98,7 @@ function Draft() {
     useEffect(() => {
         if (!user?.id || !draftId) return;
 
+
         const fetchDrafts = async () => {
             try {
                 const response = await fetch(`/api/draft/${draftId}?userId=${user?.id}`);
@@ -111,7 +111,9 @@ function Draft() {
             }
         };
 
+        setPageLoading(true);
         fetchDrafts();
+        setPageLoading(false);
     }, [draftId, refreshDraft]);
 
     useEffect(() => {
@@ -139,7 +141,9 @@ function Draft() {
             }
         };
 
+        setPageLoading(true);
         fetchCanvasData();
+        setPageLoading(false);
     }, [draft?.canvasCourseId, draft?.canvasAssignmentId]);
 
     return (
@@ -154,9 +158,16 @@ function Draft() {
             </div>
             <div className="flex flex-row gap-x-2">
                 <main className="w-full flex flex-col">
-                    <p className="tab-8 whitespace-pre p-2">
-                        Due: {new Date(assignment?.due_at).toLocaleDateString()} &#9;Points: {assignment?.points_possible}
-                    </p>
+                    <div className="flex flex-row">
+                        <p className="flex-1 tab-8 whitespace-pre p-2">
+                            Due: {new Date(assignment?.due_at).toLocaleDateString()} &#9;Points: {assignment?.points_possible}
+                        </p>
+                        {draft?.status &&
+                            <span>
+                                {draft?.status}
+                            </span>
+                        }
+                    </div>
                     <div className="border-2 border-dashed border-slate-600 p-2 bg-slate-200/50 h-full">
                         {description ? parse(description, options) : <p>Loading assignment...</p>}
                     </div>
@@ -236,6 +247,9 @@ function Draft() {
                     onFileSelect={uploadFile}
                 />
             </div>
+            {pageLoading &&
+                <LoadingSpinner />
+            }
         </div>
     );
 }

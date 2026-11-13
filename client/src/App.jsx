@@ -28,7 +28,7 @@ function App() {
           <>
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
-            <Route path="*" element={<Login />} />
+            <Route path="*" element={<Navigate to="/login" replace />} />
           </>
         ) : (
         <Route path="/" element={<GuardedRoute><Layout /></GuardedRoute>}>

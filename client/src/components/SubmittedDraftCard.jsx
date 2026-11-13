@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useUser } from '../context/UserContext';
+import { Link } from "react-router-dom";
 
 function SubmittedDraftCard({ draft }) {
     const [submission, setSubmission] = useState(null);
@@ -54,9 +55,11 @@ function SubmittedDraftCard({ draft }) {
                     <span>{submission?.score} / {assignment?.points_possible} pts</span>
                 </div>
                 <div className="col-span-3">
-                    <h1 className="text-2xl font-semibold p-2">
-                        {draft.title} - {assignment?.name}  <span className="-mb-1.5 inline-block max-w-[40%] truncate">( {submission?.course_code}</span> )
-                    </h1>
+                    <Link to={`/draft/${draft._id}`} className="block hover:text-blue-400 transition-colors" >
+                        <h1 className="text-2xl font-semibold p-2">
+                            {draft.title} - {assignment?.name}  <span className="-mb-1.5 inline-block max-w-[40%] truncate">( {submission?.course_code}</span> )
+                        </h1>
+                    </Link>
                 </div>
                 <div className="text-right">
                     {submission?.rubric &&
