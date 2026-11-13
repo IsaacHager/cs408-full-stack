@@ -26,8 +26,6 @@ function Testing() {
     const assignment = assignments.find(a => String(a.id) === String(assignmentId));
     const courseId = assignment.course_id;
 
-    console.log(assignment);
-
     try {
       const response = await fetch(`/api/draft`, {
         method: 'POST',
