@@ -65,7 +65,7 @@ function ToDoTask({ task, allTasks, toggleCollapse, collapsedTasks, handleToggle
                         }
                     </div>
                 </div>
-                <XButton onClick={() => handleDeleteTask(task._id)} />
+                <XButton tag="Delete Task" onClick={() => handleDeleteTask(task._id)} />
             </div>
             {hasSubtasks && !isCollapsed && (
                 <ul className="pl-3 divide-y divide-slate-300 bg-slate-400">

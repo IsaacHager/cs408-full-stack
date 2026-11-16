@@ -11,6 +11,7 @@ import Search from './pages/Search.jsx';
 import Testing from './pages/Testing.jsx'
 import AllDrafts from './pages/AllDrafts.jsx'
 import Draft from './pages/Draft.jsx'
+import Pinboard from './pages/Pinboard.jsx'
 import LoadingSpinner from './components/LoadingSpinner.jsx';
 import GuardedRoute from './components/GuardedRoute.jsx'
 
@@ -39,6 +40,7 @@ function App() {
           <Route path="/courses" element={<GuardedRoute><Courses /></GuardedRoute>} />
           <Route path="/testing" element={<GuardedRoute><Testing /></GuardedRoute>} />
           <Route path="/draft/:draftId" element={<GuardedRoute><Draft /></GuardedRoute>} />
+          <Route path="/pinboard" element={<GuardedRoute><Pinboard /></GuardedRoute>} />
           <Route path="/login" element={<Navigate to="/" />} />
           <Route path="/signup" element={<Navigate to="/" />} />
         </Route>
