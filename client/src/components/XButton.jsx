@@ -1,11 +1,11 @@
-function XButton({ onClick, tag }) {
+function XButton({ onClick, tag, className = '' }) {
 
     return (
 
         <button
             type="button"
             onClick={onClick}
-            className="p-1 text-slate-400 hover:text-red-400 hover:bg-slate-700 transition-colors"
+            className={`p-1 text-slate-400 hover:text-red-400 hover:bg-slate-700 transition-colors ${className}`}
             title={tag}
         >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

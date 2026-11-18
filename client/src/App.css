@@ -36,12 +36,10 @@
   background-color: transparent !important;
 }
 
-/* 1. Hide the individual tab's 'x' button when it's the only panel in the window */
 .dv-single-tab .dv-default-tab-action {
   display: none !important;
 }
 
-/* 2. Remove tab pill styling & active underline so it looks like a window title */
 .dv-single-tab .dv-tab {
   background: transparent !important;
   border: none !important;
@@ -55,8 +53,7 @@
   display: none !important;
 }
 
-/* 3. Style the lone title text like a window header label */
 .dv-single-tab .dv-default-tab-content {
   font-weight: 600;
-  color: #1e293b; /* slate-800 */
+  color: #1e293b;
 }
