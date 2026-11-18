@@ -229,7 +229,7 @@ function Draft() {
                                 >
                                     {item.fileName}
                                 </a>
-                                <XButton onClick={() => handleDeleteFile(item.fileId)} />
+                                <XButton tag="Remove File" onClick={() => handleDeleteFile(item.fileId)} />
                                 {index < array.length - 1 && (
                                     <span className="text-zinc-300 font-normal">
                                         ;

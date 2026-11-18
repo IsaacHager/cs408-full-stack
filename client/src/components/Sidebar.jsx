@@ -14,7 +14,7 @@ function Sidebar() {
         <NavButton to="/all-drafts" icon="/scroll-solid-full.svg" label="All Drafts" />
         <NavButton to="/" icon="/clipboard-list-solid-full.svg" label="ToDo List" />
         <NavButton to="/" icon="/paper-plane-solid-full.svg" label="Submit" />
-        <NavButton to="/" icon="/thumbtack-solid-full.svg" label="Pinboard" />
+        <NavButton to="/pinboard" icon="/thumbtack-solid-full.svg" label="Pinboard" />
         <NavButton to="/testing" icon="/flask-solid-full.svg" label="Testing" />
       </div>
       <div className="text-md text-slate-300 font-medium text-center mt-auto">
