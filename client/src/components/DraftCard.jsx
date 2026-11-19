@@ -145,7 +145,7 @@ function DraftCard({ draft }) {
                             </div>
                         ))}
                     </div>
-                    <span className="text-right shrink-0 whitespace-nowrap tabular-nums text-sm">
+                    <span className="text-right shrink-0 whitespace-nowrap tabular-nums text-sm min-w-[8%]">
                         {rawMinutes > 0 ? `~${hoursLeft}h ${minsLeft}m left` : ""}
                     </span>
                 </div>
