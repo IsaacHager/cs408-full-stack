@@ -119,7 +119,7 @@ function Testing() {
 
     try {
       const response = await fetch(`/api/draft/${currentDraft._id}/files?userId=${userId}`, {
-        method: 'PUT',
+        method: 'POST',
         body: formData,
       });
 

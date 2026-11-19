@@ -1,4 +1,5 @@
 const { Readable } = require('stream');
+const { pipeline } = require('stream/promises');
 const mongoose = require('mongoose');
 const Draft = require('./draft');
 const { getGridFSBucket } = require('./gridfs');
@@ -66,6 +67,7 @@ exports.downloadFile = async (req, res) => {
     const downloadName = file.filename || 'downloaded-file';
     res.set('Content-Type', file.contentType || 'application/octet-stream');
     res.set('Content-Disposition', `attachment; filename="${encodeURIComponent(downloadName)}"`);
+    res.set('Cache-Control', 'no-store');
 
     const downloadStream = bucket.openDownloadStream(_id);
     downloadStream.pipe(res);
@@ -90,6 +92,7 @@ exports.getFile = async (req, res) => {
     const downloadName = file.filename || 'downloaded-file';
     res.set('Content-Type', file.contentType || 'application/octet-stream');
     res.set('Content-Disposition', `inline; filename="${encodeURIComponent(downloadName)}"`);
+    res.set('Cache-Control', 'no-store');
 
     const downloadStream = bucket.openDownloadStream(_id);
     downloadStream.pipe(res);
@@ -119,6 +122,65 @@ exports.removeFileFromDraft = async (req, res) => {
     }
 
     return res.status(200).json({ data: draft });
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
+  }
+};
+
+exports.updateFileInDraft = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No file uploaded' });
+    }
+
+    const { draftId, fileId } = req.params;
+    const { userId } = req.query;
+
+    if (!mongoose.Types.ObjectId.isValid(draftId) || !mongoose.Types.ObjectId.isValid(fileId)) {
+      return res.status(400).json({ error: 'Invalid draftId or fileId' });
+    }
+
+    const gridFsId = new mongoose.Types.ObjectId(fileId);
+
+    const existingDraft = await Draft.findOne({
+      _id: draftId,
+      userId,
+      'files.fileId': gridFsId
+    });
+
+    if (!existingDraft) {
+      return res.status(404).json({ error: 'Draft or file not found' });
+    }
+
+    const bucket = getGridFSBucket();
+
+    const existingFiles = await bucket.find({ _id: gridFsId }).toArray();
+    if (existingFiles.length > 0) {
+      await bucket.delete(gridFsId);
+    }
+
+    const readableStream = Readable.from(req.file.buffer);
+    const uploadStream = bucket.openUploadStreamWithId(
+      gridFsId,
+      req.file.originalname,
+      { contentType: req.file.mimetype }
+    );
+
+    await pipeline(readableStream, uploadStream);
+
+    const updatedDraft = await Draft.findOneAndUpdate(
+      { _id: draftId, userId, 'files.fileId': gridFsId },
+      {
+        $set: {
+          'files.$.fileName': req.file.originalname,
+          'files.$.contentType': req.file.mimetype,
+          'files.$.fileSize': req.file.size
+        }
+      },
+      { new: true, runValidators: true }
+    );
+
+    return res.status(200).json({ data: updatedDraft });
   } catch (error) {
     return res.status(500).json({ error: error.message });
   }

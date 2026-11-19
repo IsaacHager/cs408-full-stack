@@ -5,6 +5,7 @@ import '../App.css';
 import XButton from '../components/XButton';
 import NewToolWindowButton from '../components/NewToolWindowButton'
 import FilePreview from '../components/FilePreview'
+import { PANEL_COMPONENTS } from '../structures/panelRegistry';
 
 function ExampleComponent() {
 
@@ -287,7 +288,7 @@ function Pinboard() {
                 <DockviewReact
                     theme={themeLight}
                     onReady={onReady}
-                    components={components}
+                    components={PANEL_COMPONENTS}
                     floatingGroupDragHandle="tabbar"
                     disableTabsOverflowList={true}
                     dndStrategy="pointer"
