@@ -1,7 +1,7 @@
 import FilePreview from '../components/FilePreview';
 import FileEditor from '../components/FileEditor';
-// import TodoList from '../components/TodoList';
-// import Calculator from '../components/Calculator';
+import ToDoBar from '../components/ToDoBar';
+import Calculator from '../components/Calculator';
 
 export const PANEL_TYPES = {
     FILE: 'file',
@@ -13,6 +13,6 @@ export const PANEL_TYPES = {
 export const PANEL_COMPONENTS = {
     [PANEL_TYPES.FILE]: FilePreview,
     [PANEL_TYPES.EDITOR]: FileEditor,
-    // [PANEL_TYPES.TODO]: TodoList,
-    // [PANEL_TYPES.CALCULATOR]: Calculator,
+    [PANEL_TYPES.TODO]: ToDoBar,
+    [PANEL_TYPES.CALCULATOR]: Calculator,
 };

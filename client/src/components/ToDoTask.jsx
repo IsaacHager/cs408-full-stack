@@ -25,7 +25,7 @@ function ToDoTask({ task, allTasks, toggleCollapse, collapsedTasks, handleToggle
     return (
         <li className="flex flex-col text-sm text-slate-800 hover:bg-slate-200/50 transition-colors">
             <div className="flex flex-row justify-between items-center p-3">
-                <div className="flex flex-row items-center">
+                <div className="flex flex-row items-center w-full min-w-0 overflow-hidden">
                     {hasSubtasks && (
                         <button
                             type="button"
@@ -48,18 +48,18 @@ function ToDoTask({ task, allTasks, toggleCollapse, collapsedTasks, handleToggle
                             </svg>
                         </button>
                     )}
-                    <div className="flex items-center space-x-3 truncate">
+                    <div className="flex items-center space-x-3 min-w-0 flex-1">
                         <input
                             type="checkbox"
                             checked={task.isCompleted || false}
                             onChange={(e) => handleToggleTask(task._id, e.target.checked)}
-                            className="h-4 w-4 rounded border-slate-400 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                            className="h-4 w-4 rounded border-slate-400 text-blue-600 focus:ring-blue-500 cursor-pointer shrink-0"
                         />
-                        <button className="font-medium text-slate-800 truncate" onClick={() => handleEditTask(task)}>
-                            {task.task || 'Untitled File'}
+                        <button className="font-medium text-slate-800 truncate min-w-0" onClick={() => handleEditTask(task)}>
+                            {task.task || 'Untitled Task'}
                         </button>
                         {taskTotaltime > 0 &&
-                            <p className="text-xs text-slate-600">
+                            <p className="text-xs text-slate-600 shrink-0">
                                 {String(taskTotaltime)} mins
                             </p>
                         }

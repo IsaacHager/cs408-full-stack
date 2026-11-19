@@ -271,8 +271,8 @@ function Pinboard() {
             params,
             floating: {
                 position: { left: 60, top: 60 },
-                width: 320,
-                height: 300,
+                width: 380,
+                height: 320,
             },
         });
     }, []);

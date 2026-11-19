@@ -98,7 +98,6 @@ function Draft() {
     useEffect(() => {
         if (!user?.id || !draftId) return;
 
-
         const fetchDrafts = async () => {
             try {
                 const response = await fetch(`/api/draft/${draftId}?userId=${user?.id}`);
@@ -157,7 +156,7 @@ function Draft() {
                 </span>
             </div>
             <div className="flex flex-row gap-x-2">
-                <main className="w-full flex flex-col">
+                <main className=" w-full flex flex-col">
                     <div className="flex flex-row">
                         <p className="flex-1 tab-8 whitespace-pre p-2">
                             Due: {new Date(assignment?.due_at).toLocaleDateString()} &#9;Points: {assignment?.points_possible}
@@ -172,11 +171,13 @@ function Draft() {
                         {description ? parse(description, options) : <p>Loading assignment...</p>}
                     </div>
                 </main>
-                <ToDoBar
-                    draftId={draftId}
-                    todos={draft?.todos}
-                    setRefreshDraft={setRefreshDraft}
-                />
+                <div className="w-[35%]">
+                    <ToDoBar
+                        params={
+                            {draftId}
+                        }
+                    />
+                </div>
             </div>
             <div className="w-full p-5 border border-2 border-slate-600 bg-slate-600 text-white flex flex-wrap items-center gap-x-2 gap-y-2 text-lg">
                 <span>
