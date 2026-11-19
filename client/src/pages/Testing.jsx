@@ -119,7 +119,7 @@ function Testing() {
 
     try {
       const response = await fetch(`/api/draft/${currentDraft._id}/files?userId=${userId}`, {
-        method: 'PUT',
+        method: 'POST',
         body: formData,
       });
 
@@ -385,7 +385,7 @@ function Testing() {
 
                     <div className="items-center">
                       <a
-                        href={`/api/draft/${currentDraft._id}/files/${file.fileId}`}
+                        href={`/api/draft/${currentDraft._id}/files/${file.fileId}/download`}
                         download={file.fileName || true}
                         target="_blank"
                         rel="noopener noreferrer"
