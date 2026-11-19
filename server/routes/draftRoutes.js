@@ -260,7 +260,9 @@ router.delete('/:draftId/todos/:taskId', async (req, res) => {
 
 router.put('/:draftId/files', upload.single('file'), draftController.addFileToDraft);
 
-router.get('/:draftId/files/:fileId', draftController.downloadFile);
+router.get('/:draftId/files/:fileId', draftController.getFile);
+
+router.get('/:draftId/files/:fileId/download', draftController.downloadFile);
 
 router.delete('/:draftId/files/:fileId', draftController.removeFileFromDraft);
 

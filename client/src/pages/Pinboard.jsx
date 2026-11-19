@@ -3,6 +3,8 @@ import { useCallback, useRef, useState, useMemo } from 'react';
 import 'dockview-react/dist/styles/dockview.css';
 import '../App.css';
 import XButton from '../components/XButton';
+import NewToolWindowButton from '../components/NewToolWindowButton'
+import FilePreview from '../components/FilePreview'
 
 function ExampleComponent() {
 
@@ -14,7 +16,8 @@ function ExampleComponent() {
 }
 
 const components = {
-    basic: ExampleComponent
+    basic: ExampleComponent,
+    file: FilePreview
 }
 
 const TOP_SNAP_ZONE_PX = 32;
@@ -254,16 +257,17 @@ function Pinboard() {
         );
     }, [updateMinimizedWindows]);
 
-    const handleAddPanel = useCallback(() => {
+    const handleAddPanel = useCallback((component, params, title) => {
         const api = apiRef.current;
-    if (!api || api.panels.length >= MAX_PANELS) return;
+        if (!api || api.panels.length >= MAX_PANELS) return;
 
         const id = `panel-${Date.now()}`;
 
         api.addPanel({
             id,
-            component: 'basic',
-            title: `Panel ${api.panels.length + 1}`,
+            component,
+            title,
+            params,
             floating: {
                 position: { left: 60, top: 60 },
                 width: 320,
@@ -295,17 +299,7 @@ function Pinboard() {
                     rightHeaderActionsComponent={WindowControls}
                 />
             </div>
-            <button
-                type="button"
-                onClick={handleAddPanel}
-                title="Add New Panel"
-                style={{ zIndex: 9999 }}
-                className="absolute bottom-4 left-4 w-12 h-12 rounded-full bg-slate-600 hover:bg-slate-500 active:scale-95 text-white shadow-lg flex items-center justify-center transition-all cursor-pointer"
-            >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
-                </svg>
-            </button>
+            <NewToolWindowButton handleAddPanel={handleAddPanel} />
             {minimizedWindows.length > 0 && (
                 <div className=" absolute bottom-0 left-24 right-4 h-10 shrink-0 flex flex-row items-center pt-2 -space-x-2">
                     {minimizedWindows.map((win) => (

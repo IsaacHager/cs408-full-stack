@@ -75,6 +75,30 @@ exports.downloadFile = async (req, res) => {
   }
 };
 
+exports.getFile = async (req, res) => {
+  try {
+    const { fileId } = req.params;
+    const bucket = getGridFSBucket();
+    const _id = new mongoose.Types.ObjectId(fileId);
+
+    const files = await bucket.find({ _id }).toArray();
+    if (!files || files.length === 0) {
+      return res.status(404).json({ error: 'File not found' });
+    }
+
+    const file = files[0];
+    const downloadName = file.filename || 'downloaded-file';
+    res.set('Content-Type', file.contentType || 'application/octet-stream');
+    res.set('Content-Disposition', `inline; filename="${encodeURIComponent(downloadName)}"`);
+
+    const downloadStream = bucket.openDownloadStream(_id);
+    downloadStream.pipe(res);
+  } catch (error) {
+    console.log(error.message);
+    return res.status(500).json({ error: error.message });
+  }
+};
+
 exports.removeFileFromDraft = async (req, res) => {
   try {
     const { draftId, fileId } = req.params;
