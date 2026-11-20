@@ -4,17 +4,21 @@ import ToDoTask from './ToDoTask';
 import EditTaskModal from './EditTaskModal';
 import LoadingSpinner from './LoadingSpinner';
 
-function ToDoBar({ draftId, todos, setRefreshDraft }) {
+function ToDoBar({ params }) {
+    const [todos, setTodos] = useState([]);
     const [collapsedTasks, setCollapsedTasks] = useState({});
     const [editTask, setEditTask] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [refreshTasks, setRefreshTasks] = useState(0);
     const { user } = useUser();
+
+    const { draftId } = params;
 
     async function handleCloseModal() {
         setLoading(true);
         setIsModalOpen(false);
-        setRefreshDraft(prev => prev + 1);
+        setRefreshTasks(prev => prev + 1);
         setEditTask(null);
         setLoading(false);
     }
@@ -46,7 +50,7 @@ function ToDoBar({ draftId, todos, setRefreshDraft }) {
                 throw new Error(data.error || 'Failed to update task status');
             }
 
-            setRefreshDraft(prev => prev + 1);
+            setRefreshTasks(prev => prev + 1);
             setLoading(false);
 
         } catch (error) {
@@ -85,7 +89,7 @@ function ToDoBar({ draftId, todos, setRefreshDraft }) {
 
             await Promise.all(deletePromises);
 
-            setRefreshDraft(prev => prev + 1);
+            setRefreshTasks(prev => prev + 1);
             setLoading(false);
 
         } catch (error) {
@@ -105,8 +109,28 @@ function ToDoBar({ draftId, todos, setRefreshDraft }) {
 
     const parentTasks = todos?.filter((t) => !t.parentId);
 
+    useEffect(() => {
+        if (!user?.id || !draftId) return;
+
+        const fetchTodos = async () => {
+            try {
+                const response = await fetch(`/api/draft/${draftId}/todos?userId=${user?.id}`);
+
+                const data = await response.json();
+
+                setTodos(data);
+            } catch (error) {
+                console.error('Error loading drafts:', error);
+            }
+        };
+
+        setLoading(true);
+        fetchTodos();
+        setLoading(false);
+    }, [draftId, refreshTasks]);
+
     return (
-        <aside className="bg-slate-400 border-2 border-slate-600 p-2 w-[35%] space-y-2">
+        <aside className="bg-slate-400 border-2 border-slate-600 p-2 w-full h-full space-y-2 overflow-scroll">
             <div className="flex flex-row justify-between">
                 ToDo: {todos?.length || 0} Task{todos?.length === 1 ? '' : 's' || 's'}
                 <button

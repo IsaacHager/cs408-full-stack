@@ -53,7 +53,7 @@ function Draft() {
 
         try {
             const response = await fetch(`/api/draft/${draft._id}/files?userId=${userId}`, {
-                method: 'PUT',
+                method: 'POST',
                 body: formData,
             });
 
@@ -97,7 +97,6 @@ function Draft() {
 
     useEffect(() => {
         if (!user?.id || !draftId) return;
-
 
         const fetchDrafts = async () => {
             try {
@@ -157,7 +156,7 @@ function Draft() {
                 </span>
             </div>
             <div className="flex flex-row gap-x-2">
-                <main className="w-full flex flex-col">
+                <main className=" w-full flex flex-col">
                     <div className="flex flex-row">
                         <p className="flex-1 tab-8 whitespace-pre p-2">
                             Due: {new Date(assignment?.due_at).toLocaleDateString()} &#9;Points: {assignment?.points_possible}
@@ -172,11 +171,13 @@ function Draft() {
                         {description ? parse(description, options) : <p>Loading assignment...</p>}
                     </div>
                 </main>
-                <ToDoBar
-                    draftId={draftId}
-                    todos={draft?.todos}
-                    setRefreshDraft={setRefreshDraft}
-                />
+                <div className="w-[35%]">
+                    <ToDoBar
+                        params={
+                            {draftId}
+                        }
+                    />
+                </div>
             </div>
             <div className="w-full p-5 border border-2 border-slate-600 bg-slate-600 text-white flex flex-wrap items-center gap-x-2 gap-y-2 text-lg">
                 <span>
@@ -221,7 +222,7 @@ function Draft() {
                         draft?.files.map((item, index, array) => (
                             <span key={item.fileId || index} className="inline-flex items-center gap-2">
                                 <a
-                                    href={`/api/draft/${draft?._id}/files/${item.fileId}`}
+                                    href={`/api/draft/${draft?._id}/files/${item.fileId}/download`}
                                     download={item.fileName || true}
                                     target="_blank"
                                     rel="noopener noreferrer"
@@ -229,7 +230,7 @@ function Draft() {
                                 >
                                     {item.fileName}
                                 </a>
-                                <XButton onClick={() => handleDeleteFile(item.fileId)} />
+                                <XButton tag="Remove File" onClick={() => handleDeleteFile(item.fileId)} />
                                 {index < array.length - 1 && (
                                     <span className="text-zinc-300 font-normal">
                                         ;

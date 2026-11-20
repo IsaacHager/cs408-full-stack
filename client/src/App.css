@@ -31,3 +31,29 @@
     transform: translateY(3px);
     border-bottom-width: 2px;
 }
+
+.dv-dockview {
+  background-color: transparent !important;
+}
+
+.dv-single-tab .dv-default-tab-action {
+  display: none !important;
+}
+
+.dv-single-tab .dv-tab {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding-left: 12px;
+  cursor: grab;
+}
+
+.dv-single-tab .dv-tab::after,
+.dv-single-tab .dv-tab::before {
+  display: none !important;
+}
+
+.dv-single-tab .dv-default-tab-content {
+  font-weight: 600;
+  color: #1e293b;
+}

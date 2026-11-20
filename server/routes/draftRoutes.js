@@ -74,7 +74,6 @@ router.get('/:draftId', async (req, res) => {
     } catch (error) {
         return res.status(500).json({ error: error.message });
     }
-
 });
 
 router.put('/:draftId', async (req, res) => {
@@ -155,12 +154,35 @@ router.delete('/:draftId', async (req, res) => {
 
 });
 
+router.get('/:draftId/todos', async (req, res) => {
+     try {
+        const { userId } = req.query;
+        const { draftId } = req.params;
+
+        if (!userId) {
+            return res.status(400).json({ error: 'User ID required' });
+        }
+
+        const draft = (await Draft.findOne({ _id: draftId, userId }));
+
+        if (!draft) {
+            return res.status(404).json({ error: 'Draft not found' });
+        }
+
+        const todos = draft.todos;
+
+        return res.status(200).json(todos);
+
+    } catch (error) {
+        return res.status(500).json({ error: error.message });
+    }
+});
+
 router.post('/:draftId/todos', async (req, res) => {
     try {
         const { draftId } = req.params;
         const { userId } = req.query;
         const { task, parentId, timeMinutes } = req.body;
-
 
         if (!userId) {
             return res.status(400).json({ error: 'User ID required' });
@@ -258,10 +280,14 @@ router.delete('/:draftId/todos/:taskId', async (req, res) => {
     }
 });
 
-router.put('/:draftId/files', upload.single('file'), draftController.addFileToDraft);
+router.post('/:draftId/files', upload.single('file'), draftController.addFileToDraft);
 
-router.get('/:draftId/files/:fileId', draftController.downloadFile);
+router.get('/:draftId/files/:fileId', draftController.getFile);
+
+router.get('/:draftId/files/:fileId/download', draftController.downloadFile);
 
 router.delete('/:draftId/files/:fileId', draftController.removeFileFromDraft);
+
+router.put('/:draftId/files/:fileId', upload.single('file'), draftController.updateFileInDraft);
 
 module.exports = router;
